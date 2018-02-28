@@ -1,3 +1,10 @@
+# vim turds
+*.sw[a-zA-Z]
+
+# compiled things
+obj/*
+bin/*
+
 # Prerequisites
 *.d
 
