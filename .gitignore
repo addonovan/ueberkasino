@@ -1,6 +1,9 @@
 # vim turds
 *.sw[a-zA-Z]
 
+# generated sources
+gen/*
+
 # compiled things
 obj/*
 bin/*
