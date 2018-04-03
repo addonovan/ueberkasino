@@ -1,40 +1,36 @@
 #include "infiniteshoe.hpp"
+#include <chrono>
+#include <ctime>
 #include <iostream>
 #include <stdlib.h>
-#include <ctime>
 #include <thread>
-#include <chrono>
 
-bool quitter=false;
-int j,i;
+bool quitter = false;
+int i;
+auto j = 0u;
 UberCasino::InfiniteShoe testInfShoe;
 
-//Requires compile with -pthread
+void printDeck() {
 
-void printDeck(){
-
-  while(true && !quitter){
-
-    if(j >testInfShoe.getShoe().size()){
+  while (!quitter) {
+    if (j > testInfShoe.getShoe().size()) {
       testInfShoe.instanceShoe();
     }
-    std::cout<<testInfShoe.next(j).getSuit()<<" "<< testInfShoe.next(j).getValue()<<std::endl;
+
+    std::cout << testInfShoe.next(j).getSuit() << " "
+              << testInfShoe.next(j).getValue() << std::endl;
     j++;
     std::this_thread::sleep_for(std::chrono::milliseconds(i));
-
+  }
 }
 
+void stopper() {
+  if (std::cin.get() == 'q')
+    quitter = true;
 }
 
-void stopper(){
-  if(std::cin.get()=='q')
-    quitter=true;
-}
-
-
-
-int main(){
-  std::cin>>i;
+int main() {
+  std::cin >> i;
   std::cin.clear();
   std::cin.ignore(1000, '\n');
   testInfShoe.instanceShoe();
@@ -43,7 +39,5 @@ int main(){
 
   dealer_thread.join();
   stop_thread.join();
-  
-
-      return 0;
-  }
+  return 0;
+}

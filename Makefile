@@ -1,69 +1,81 @@
-PRODUCT := uk
-BIN  	:= bin
-INC 	:= include
-IDL 	:= idl
-SRC	:= src
-GEN	:= gen
-GEN_SRC := $(GEN)/src
-GEN_INC := $(GEN)/include
-TEST 	:= test
-OBJ 	:= obj
+PRODUCT     := uk
+BIN         := bin
+INC         := include
+GEN         := gen
+GEN_SRC     := $(GEN)/src
+GEN_INC     := $(GEN)/include
+SRC         := src
+TEST        := test
+OBJ         := obj
 
-CXX	 := g++
-LINKER	 := g++
-CXXFLAGS := -Wall -Wextra -pedantic -Werror -g3
-INCLUDE  := -I$(INC) -I$(GEN_INC)
+CXX         := g++
+CXXFLAGS    := -Wall -Wextra -pedantic -Werror -g -std=c++11
 
-IDLS	  := $(wildcard $(IDL)/*.idl)
+LINKER      := g++
+LFLAGS      := -lpthread
 
-GEN_SRCS  := $(wildcard $(GEN_SRC)/*.cpp)
-TEST_SRCS := $(wildcard $(TEST)/*.cpp)
-SRCS      := $(wildcard $(SRC)/*.cpp)
-SRCS      := $(filter-out src/main.cpp, $(SRCS))
+INCLUDE     := -I$(INC) -I$(GEN_INC)
 
-GEN_OBJS  := $(patsubst $(GEN_SRC)/%.cpp, $(OBJ)/%.o, $(GEN_SRCS))
-TEST_OBJS := $(patsubst $(TEST)/%.cpp, $(OBJ)/test_%.o, $(TEST_SRCS))
-OBJS      := $(patsubst $(SRC)/%.cpp, $(OBJ)/%.o, $(SRCS))
+EXT         := cpp
+MAIN        := $(SRC)/main.$(EXT)
+TEST_FMT    := test_%
 
-TEST_OUTS := $(patsubst $(TEST)/%.cpp, $(BIN)/test_%.out, $(TEST_SRCS))
+IDLS        := $(wildcard $(IDL)/*.idl)
 
-#
-# Test Builds
-#
+SRCS        := $(wildcard $(SRC)/*.$(EXT))
+SRCS        := $(filter-out $(MAIN), $(SRCS))
+TEST_SRCS   := $(wildcard $(TEST)/*.$(EXT))
 
-run_tests: $(TEST_OUTS)
-	./$<
-.PHONY: run_tests
+OBJS        := $(patsubst $(SRC)/%.$(EXT), $(OBJ)/%.o, $(SRCS))
+MAIN_OBJ    := $(patsubst $(SRC)/%.$(EXT), $(OBJ)/%.o, $(MAIN))
 
-build_tests: makedirs $(TEST_OUTS) idl
-.PHONY: build_tests
+TEST_BINS   := $(patsubst $(TEST)/%.$(EXT), $(BIN)/$(TEST_FMT), $(TEST_SRCS))
 
-$(BIN)/%.out: $(TEST_OBJS) $(OBJS) $(GEN_OBJS)
-	$(LINKER) $(CXXFLAGS) $(TEST_OBJS) $(OBJS) -o $@
 
-$(OBJ)/%.o: $(TEST_SRCS)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
+################################################################################
+# EXECUTABLES                                                                  #
+################################################################################
 
-#
-# Full builds
-#
+test: build $(TEST_BINS)
+	@for file in $(TEST_BINS); do\
+		echo "$$file...";\
+		./$$file 2> /dev/null;\
+		if [ "$$?" != "0" ]; then\
+			echo "";\
+		fi;\
+	done
+.PHONY: test
 
 run: build
 	./$(BIN)/$(PRODUCT)
 .PHONY: run
 
-build: makedirs $(BIN)/$(PRODUCT) idl
+
+################################################################################
+# BUILDING                                                                     #
+################################################################################
+
+test_build: prebuild $(OBJS) $(TEST_BINS)
+.PHONY: test_build
+
+build: prebuild $(BIN)/$(PRODUCT)
 .PHONY: build 
 
-$(BIN)/$(PRODUCT): $(OBJS) $(GEN_OBJS)
-	$(LINKER) $(CXXFLAGS) $(INCLUDE) $^ src/main.cpp -o $@
+$(BIN)/$(PRODUCT): $(OBJS) $(MAIN_OBJ)
+	$(LINKER) $(LFLAGS) $(OBJS) $(MAIN_OBJ) -o $@
 
-$(OBJ)/%.o: $(SRCS)
+$(MAIN_OBJ): $(MAIN)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
 
-#
-# IDL Generation & Compilation
-#
+$(OBJ)/%.o: $(SRC)/%.$(EXT)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
+
+# Tests
+
+$(BIN)/$(TEST_FMT): $(TEST)/%.$(EXT)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $(OBJS) $< -o $@ $(LFLAGS)
+
+# IDL shit
 
 idl: $(IDLS)
 	${OSPL_HOME}/bin/idlpp -d $(GEN) -l cpp $(IDLS)
@@ -73,28 +85,18 @@ idl: $(IDLS)
 $(OBJ)/%.o: $(GEN_SRCS)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
 
-#
-# Miscellaneous
-#
+################################################################################
+# Miscellaneous                                                                #
+################################################################################
+
+prebuild: makedirs idl
+.PHONY: prebuild
 
 makedirs:
-	@mkdir -p $(BIN)
-	@mkdir -p $(OBJ)
-	@mkdir -p $(GEN)
-	@mkdir -p $(GEN_INC)
-	@mkdir -p $(GEN_SRC)
+	@mkdir -p $(BIN) $(OBJ)
 .PHONY: makedirs
 
 clean:
-	@rm -rf $(BIN)
-	@rm -rf $(OBJ)
-	@rm -rf $(GEN)
-	@rm -rf $(GEN_INC)
-	@rm -rf $(GEN_SRC)
-	@mkdir -p $(BIN)
-	@mkdir -p $(OBJ)
-	@mkdir -p $(GEN)
-	@mkdir -p $(GEN_INC)
-	@mkdir -p $(GEN_SRC)
+	@rm -rf $(BIN) $(OBJ)
+	@mkdir -p $(BIN) $(OBJ)
 .PHONY: clean
-

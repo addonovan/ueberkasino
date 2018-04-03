@@ -3,22 +3,40 @@
 #include "shoe.hpp"
 #include <vector>
 
-
 namespace UberCasino {
 
-class EightDeckShoe{
+class EightDeckShoe {
 
-  public:
-    Card next(int i);              //Returns the card at index i in the shoe
-    void addCard(Card card);       //Adds a card to the Shoe
-    void resetShoe();              //Empties all cards in the Shoe
-    void instanceShoe();           //Fills the shoe with a set number of cards
-    std::vector<Card> getShoe();   //Returns the vector of cards in the shoe
+public:
+  EightDeckShoe();
 
-  private:
-      std::vector<Card> EightDeck;
-  };
+  /**
+   * Returns the card at the index specified in the Shoe
+   * @param i the index specified
+   * @return the card at the specified index
+   */
+  Card next(int i);
 
+  /**
+   * Adds a new card to the Shoe
+   * @param card the card to be added
+   */
+  void addCard(Card card);
+
+  /**
+   * Empties all the cards in the shoe, used after all cards have been dealt
+   */
+  void resetShoe();
+
+  /**
+   * Provides access to the vector of cards in the Shoe
+   * @return the vector of cards
+   */
+  std::vector<Card> getShoe();
+
+private:
+  std::vector<Card> EightDeck;
+};
 }
 
 #endif
