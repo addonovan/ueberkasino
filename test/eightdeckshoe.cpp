@@ -8,7 +8,7 @@
 int main() {
   UberCasino::EightDeckShoe testShoe;
 
-  testShoe.instanceShoe();
+  
   int i;
   auto j = 0u;
   std::cin >> i;
