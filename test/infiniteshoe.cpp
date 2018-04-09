@@ -30,6 +30,7 @@ void stopper() {
 }
 
 int main() {
+  /*
   std::cin >> i;
   std::cin.clear();
   std::cin.ignore(1000, '\n');
@@ -39,5 +40,6 @@ int main() {
 
   dealer_thread.join();
   stop_thread.join();
+  */
   return 0;
 }
