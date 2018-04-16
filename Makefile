@@ -7,14 +7,19 @@ GEN_INC     := $(GEN)/include
 SRC         := src
 TEST        := test
 OBJ         := obj
+IDL         := idl
 
 CXX         := g++
-CXXFLAGS    := -Wall -Wextra -pedantic -Werror -g -std=c++11
+CXXFLAGS    := -Wall -Wextra -Werror -g -std=c++11
 
 LINKER      := g++
-LFLAGS      := -lpthread
+LFLAGS      := -L${OSPL_HOME}/lib \
+			   -lpthread -lddskernel -ldcpssacpp \
+			   -lboost_system -lboost_thread
 
-INCLUDE     := -I$(INC) -I$(GEN_INC)
+INCLUDE     := -I$(INC) -I$(GEN_INC) \
+			   -I${OSPL_HOME}/include/dcps/C++/SACPP/ \
+			   -I${OSPL_HOME}/include/sys
 
 EXT         := cpp
 MAIN        := $(SRC)/main.$(EXT)
@@ -24,9 +29,15 @@ IDLS        := $(wildcard $(IDL)/*.idl)
 
 SRCS        := $(wildcard $(SRC)/*.$(EXT))
 SRCS        := $(filter-out $(MAIN), $(SRCS))
+GEN_SRCS    := $(GEN_SRC)/UeberKasino.cpp \
+			         $(GEN_SRC)/UeberKasinoDcps.cpp \
+			         $(GEN_SRC)/UeberKasinoDcps_impl.cpp \
+			         $(GEN_SRC)/UeberKasinoSplDcps.cpp
 TEST_SRCS   := $(wildcard $(TEST)/*.$(EXT))
 
 OBJS        := $(patsubst $(SRC)/%.$(EXT), $(OBJ)/%.o, $(SRCS))
+GEN_OBJS    := $(patsubst $(GEN_SRC)/%.$(EXT), $(OBJ)/%.o, $(GEN_SRCS))
+OBJS        := $(GEN_OBJS) $(OBJS)
 MAIN_OBJ    := $(patsubst $(SRC)/%.$(EXT), $(OBJ)/%.o, $(MAIN))
 
 TEST_BINS   := $(patsubst $(TEST)/%.$(EXT), $(BIN)/$(TEST_FMT), $(TEST_SRCS))
@@ -62,7 +73,7 @@ build: prebuild $(BIN)/$(PRODUCT)
 .PHONY: build 
 
 $(BIN)/$(PRODUCT): $(OBJS) $(MAIN_OBJ)
-	$(LINKER) $(LFLAGS) $(OBJS) $(MAIN_OBJ) -o $@
+	$(LINKER) $(OBJS) $(MAIN_OBJ) -o $@ $(LFLAGS)
 
 $(MAIN_OBJ): $(MAIN)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
@@ -77,22 +88,40 @@ $(BIN)/$(TEST_FMT): $(TEST)/%.$(EXT)
 
 # IDL shit
 
-idl: $(IDLS)
+$(GEN_SRCS): $(IDLS)
 	${OSPL_HOME}/bin/idlpp -d $(GEN) -l cpp $(IDLS)
 	mv $(GEN)/*.cpp $(GEN_SRC)
 	mv $(GEN)/*.h $(GEN_INC)
 
-$(OBJ)/%.o: $(GEN_SRCS)
+$(OBJ)/%.o: $(GEN_SRC)/%.$(EXT)
+	sed -i 's/#include "\(.*\)"/#include <\1>/' $<
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
 
 ################################################################################
 # Miscellaneous                                                                #
 ################################################################################
 
+DIRS := $(BIN) $(OBJ) $(GEN_INC) $(GEN_SRC) $(GEN)
+
 prebuild: makedirs idl
 .PHONY: prebuild
 
 makedirs:
+	@mkdir -p $(DIRS)
+.PHONY: makedirs
+
+clean:
+	@rm -rf $(DIRS)
+	@mkdir -p $(DIRS)
+.PHONY: clean
+
+echo:
+	@echo "SRCS      = $(SRCS)"
+	@echo "GEN_SRCS  = $(GEN_SRCS)"
+	@echo "TEST_SRCS = $(TEST_SRCS)"
+	@echo "OBJS      = $(OBJS)"
+	@echo "TEST_OBJS = $(TEST_OBJS)"
+.PHONY: echo
 	@mkdir -p $(BIN) $(OBJ)
 .PHONY: makedirs
 
