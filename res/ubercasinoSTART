@@ -1,0 +1,27 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0304
+header_name {.h}
+code_name {.cxx}
+Function {make_window()} {open
+} {
+  Fl_Window {} {open selected
+    xywh {0 64 1360 704} type Double color 58 size_range {100 100 100 100} visible
+  } {
+    Fl_Text_Display {} {
+      label {ÜBER CASINO}
+      xywh {680 225 0 0} labelfont 9 labelsize 100 labelcolor 23
+    }
+    Fl_Button {} {
+      label {HOW TO}
+      xywh {245 325 100 100} box DIAMOND_UP_BOX color 32 labelfont 9 labelcolor 23
+    }
+    Fl_Button {} {
+      label EXIT
+      xywh {1015 325 100 100} box DIAMOND_UP_BOX color 32 labelfont 9 labelcolor 23
+    }
+    Fl_Button {} {
+      label PLAY
+      xywh {630 325 100 100} box DIAMOND_UP_BOX color 72 labelfont 9 labelcolor 23
+    }
+  }
+}

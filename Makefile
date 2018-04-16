@@ -10,35 +10,39 @@ OBJ         := obj
 IDL         := idl
 
 CXX         := g++
-CXXFLAGS    := -Wall -Wextra -Werror -g -std=c++11
+CXXFLAGS    := -Wall -Wextra -Werror -g -std=c++11 \
+               `fltk-config --cxxflags`
 
 LINKER      := g++
 LFLAGS      := -L${OSPL_HOME}/lib \
 			   -lpthread -lddskernel -ldcpssacpp \
-			   -lboost_system -lboost_thread
+			   -lboost_system -lboost_thread \
+			   `fltk-config --ldflags`
 
 INCLUDE     := -I$(INC) -I$(GEN_INC) \
 			   -I${OSPL_HOME}/include/dcps/C++/SACPP/ \
-			   -I${OSPL_HOME}/include/sys
+			   -I${OSPL_HOME}/include/sys \
 
 EXT         := cpp
-MAIN        := $(SRC)/main.$(EXT)
+MAIN        := $(SRC)/mainwin.$(EXT)
 TEST_FMT    := test_%
 
 IDLS        := $(wildcard $(IDL)/*.idl)
 
 SRCS        := $(wildcard $(SRC)/*.$(EXT))
 SRCS        := $(filter-out $(MAIN), $(SRCS))
+SRCS        := $(filter-out $(FLTK_SRCS), $(SRCS))
 GEN_SRCS    := $(GEN_SRC)/UeberKasino.cpp \
-			         $(GEN_SRC)/UeberKasinoDcps.cpp \
-			         $(GEN_SRC)/UeberKasinoDcps_impl.cpp \
-			         $(GEN_SRC)/UeberKasinoSplDcps.cpp
+               $(GEN_SRC)/UeberKasinoDcps.cpp \
+               $(GEN_SRC)/UeberKasinoDcps_impl.cpp \
+               $(GEN_SRC)/UeberKasinoSplDcps.cpp
 TEST_SRCS   := $(wildcard $(TEST)/*.$(EXT))
 
 OBJS        := $(patsubst $(SRC)/%.$(EXT), $(OBJ)/%.o, $(SRCS))
 GEN_OBJS    := $(patsubst $(GEN_SRC)/%.$(EXT), $(OBJ)/%.o, $(GEN_SRCS))
-OBJS        := $(GEN_OBJS) $(OBJS)
+OBJS        := $(GEN_OBJS) $(FLTK_SRCS) $(OBJS)
 MAIN_OBJ    := $(patsubst $(SRC)/%.$(EXT), $(OBJ)/%.o, $(MAIN))
+FLTK_OBJ    := $(OBJ)/fltk.o
 
 TEST_BINS   := $(patsubst $(TEST)/%.$(EXT), $(BIN)/$(TEST_FMT), $(TEST_SRCS))
 
@@ -76,7 +80,7 @@ $(BIN)/$(PRODUCT): $(OBJS) $(MAIN_OBJ)
 	$(LINKER) $(OBJS) $(MAIN_OBJ) -o $@ $(LFLAGS)
 
 $(MAIN_OBJ): $(MAIN)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
+	$(CXX) $(INCLUDE) -c $< -o $@
 
 $(OBJ)/%.o: $(SRC)/%.$(EXT)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
@@ -103,7 +107,7 @@ $(OBJ)/%.o: $(GEN_SRC)/%.$(EXT)
 
 DIRS := $(BIN) $(OBJ) $(GEN_INC) $(GEN_SRC) $(GEN)
 
-prebuild: makedirs idl
+prebuild: makedirs
 .PHONY: prebuild
 
 makedirs:
@@ -119,13 +123,9 @@ echo:
 	@echo "SRCS      = $(SRCS)"
 	@echo "GEN_SRCS  = $(GEN_SRCS)"
 	@echo "TEST_SRCS = $(TEST_SRCS)"
+	@echo "FLTK_SRCS = $(FLTK_SRCS)"
 	@echo "OBJS      = $(OBJS)"
 	@echo "TEST_OBJS = $(TEST_OBJS)"
 .PHONY: echo
 	@mkdir -p $(BIN) $(OBJ)
 .PHONY: makedirs
-
-clean:
-	@rm -rf $(BIN) $(OBJ)
-	@mkdir -p $(BIN) $(OBJ)
-.PHONY: clean

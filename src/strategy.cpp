@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string> // this will probably change
+#include <stdexcept>
 
 Strategy::Strategy() {
     _currentStrat = MANUAL;
@@ -48,9 +49,16 @@ std::string Strategy::conservativeMove(std::vector<UberCasino::Card> hand) {
 }
 
 std::string Strategy::countingMove(std::vector<UberCasino::Card> hand) {
-
+    (void)(hand);
+    throw std::runtime_error{"I wasn't implemented :("};
 }
 
-std::string recklessMove(std::vector<UberCasino::Card> hand) {
+std::string Strategy::recklessMove(std::vector<UberCasino::Card> hand) {
+    (void)(hand);
     return "Hit";
+}
+
+std::string Strategy::lookupMove(std::vector<UberCasino::Card> hand) {
+    (void)(hand);
+    throw std::runtime_error{"I wasn't implemented :("};
 }
