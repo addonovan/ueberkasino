@@ -4,7 +4,7 @@
 #include <string> // this will probably change
 
 Strategy::Strategy() {
-
+    _currentStrat = MANUAL;
 }
 
 void Strategy::switchStrategy(Strat newStrat) {
