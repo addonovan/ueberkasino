@@ -19,7 +19,7 @@ LFLAGS      := -L${OSPL_HOME}/lib \
 			   -lboost_system -lboost_thread \
 			   `fltk-config --ldflags`
 
-INCLUDE     := -I$(INC) -I$(GEN_INC) \
+INCLUDE		:= -I$(INC) -I$(GEN_INC) \
 			   -I${OSPL_HOME}/include/dcps/C++/SACPP/ \
 			   -I${OSPL_HOME}/include/sys \
 
@@ -27,7 +27,7 @@ EXT         := cpp
 MAIN        := $(SRC)/mainwin.$(EXT)
 TEST_FMT    := test_%
 
-IDLS        := $(wildcard $(IDL)/*.idl)
+IDLS		:= $(wildcard $(IDL)/*.idl)
 
 SRCS        := $(wildcard $(SRC)/*.$(EXT))
 SRCS        := $(filter-out $(MAIN), $(SRCS))
@@ -44,11 +44,11 @@ OBJS        := $(GEN_OBJS) $(FLTK_SRCS) $(OBJS)
 MAIN_OBJ    := $(patsubst $(SRC)/%.$(EXT), $(OBJ)/%.o, $(MAIN))
 FLTK_OBJ    := $(OBJ)/fltk.o
 
-TEST_BINS   := $(patsubst $(TEST)/%.$(EXT), $(BIN)/$(TEST_FMT), $(TEST_SRCS))
+TEST_BINS	:= $(patsubst $(TEST)/%.$(EXT), $(BIN)/$(TEST_FMT), $(TEST_SRCS))
 
 
 ################################################################################
-# EXECUTABLES                                                                  #
+# EXECUTABLES																   #
 ################################################################################
 
 test: build $(TEST_BINS)
@@ -67,7 +67,7 @@ run: build
 
 
 ################################################################################
-# BUILDING                                                                     #
+# BUILDING																	   #
 ################################################################################
 
 test_build: prebuild $(OBJS) $(TEST_BINS)
@@ -80,7 +80,7 @@ $(BIN)/$(PRODUCT): $(OBJS) $(MAIN_OBJ)
 	$(LINKER) $(OBJS) $(MAIN_OBJ) -o $@ $(LFLAGS)
 
 $(MAIN_OBJ): $(MAIN)
-	$(CXX) $(INCLUDE) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
 
 $(OBJ)/%.o: $(SRC)/%.$(EXT)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
@@ -102,7 +102,7 @@ $(OBJ)/%.o: $(GEN_SRC)/%.$(EXT)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
 
 ################################################################################
-# Miscellaneous                                                                #
+# Miscellaneous																   #
 ################################################################################
 
 DIRS := $(BIN) $(OBJ) $(GEN_INC) $(GEN_SRC) $(GEN)
@@ -120,7 +120,7 @@ clean:
 .PHONY: clean
 
 echo:
-	@echo "SRCS      = $(SRCS)"
+	@echo "SRCS		 = $(SRCS)"
 	@echo "GEN_SRCS  = $(GEN_SRCS)"
 	@echo "TEST_SRCS = $(TEST_SRCS)"
 	@echo "FLTK_SRCS = $(FLTK_SRCS)"
