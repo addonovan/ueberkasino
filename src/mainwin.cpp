@@ -24,6 +24,9 @@ UberCasino::Player player;
 /*================================================== H E L P   M E N U ==================================================
 =======================================================================================================================*/
 
+/** 
+ * Purpose: Presents a window that displays a text box with blackjack instructions
+ */
 void howButton_callback(Fl_Widget*, void* a)
 {
 	(void)(a);
@@ -89,6 +92,9 @@ void howButton_callback(Fl_Widget*, void* a)
 
 /*================================================== G A M E   S C R E E N ==================================================
 ===========================================================================================================================*/
+/** 
+ * Purpose: Updates the bet amount and wallet displays and values by +1 and -1 respectively
+ */
 void bet1_callback(Fl_Widget*, void* v)
 {
 	(void)(v);
@@ -114,6 +120,9 @@ void bet1_callback(Fl_Widget*, void* v)
 	tmbuff->text(::purse.c_str());
 }
 
+/**
+ * Purpose: Updates the bet amount and wallet displays and values by +5 and -5 respectively
+ */
 void bet5_callback(Fl_Widget*, void* v)
 {
 	(void)(v);
@@ -139,6 +148,9 @@ void bet5_callback(Fl_Widget*, void* v)
 	tmbuff->text(::purse.c_str());
 }
 
+/**
+ * Purpose: Updates the bet amount and wallet displays and values by +10 and -10 respectively
+ */
 void bet10_callback(Fl_Widget*, void* v)
 
 {
@@ -166,6 +178,9 @@ void bet10_callback(Fl_Widget*, void* v)
 	tmbuff->text(::purse.c_str());
 }
 
+/**
+ * Purpose: Updates the bet amount and wallet displays and values by +50 and -50 respectively
+ */
 void bet50_callback(Fl_Widget*, void* v)
 {
 	(void)(v);
@@ -192,6 +207,10 @@ void bet50_callback(Fl_Widget*, void* v)
 	tmbuff->text(::purse.c_str());
 }
 
+/**
+ * Purpose: Updates the bet amount and wallet displays and values by clearing what is in the bet amount and 
+ * returning it into the wallet
+ */
 void clear_callback(Fl_Widget*, void* v)
 {
 	(void)(v);
@@ -216,6 +235,9 @@ void clear_callback(Fl_Widget*, void* v)
 	tbbuff->text(::betAmount.c_str());
 }
 
+/**
+ * Purpose: Tells the dealer to give the player an additional card
+ */
 void hit_callback(Fl_Widget*, void* v)
 {
 	player.action(1);
@@ -223,6 +245,9 @@ void hit_callback(Fl_Widget*, void* v)
 	(void)(v);
 }
 
+/**
+ * Purpose: Tells the dealer the player is done accepting cards
+ */
 void stand_callback(Fl_Widget*, void* v)
 {
   player.action(2);
@@ -230,6 +255,9 @@ void stand_callback(Fl_Widget*, void* v)
 	(void)(v);
 }
 
+/**
+ * Purpose: Tells the dealer the player wishes to double down
+ */
 void dbldown_callback(Fl_Widget*, void* v)
 {
 	player.action(3);
@@ -237,30 +265,48 @@ void dbldown_callback(Fl_Widget*, void* v)
 	(void)(v);
 }
 
+/**
+ * Purpose: Changes the player strategy to manual
+ */
 void manual_callback(Fl_Widget*, void* v)
 {
 	player.chooseStrategy(UberCasino::Strategy::Strat::MANUAL);
 	(void)(v);
 }
 
+/**
+ * Purpose: Changes the player strategy to conservative
+ */
 void conservative_callback(Fl_Widget*, void* v)
 {
 	player.chooseStrategy(UberCasino::Strategy::Strat::CONSERV);
 	(void)(v);
 }
 
+/**
+ * Purpose: Changes the player strategty to reckless
+ */
 void reckless_callback(Fl_Widget*, void* v)
 {
 	player.chooseStrategy(UberCasino::Strategy::Strat::RECKLESS);
 	(void)(v);
 }
 
+/**
+ * Purpose: Changes the player strategy to the tradtional lookup table
+ */
 void traditional_callback(Fl_Widget*, void* v)
 {
 player.chooseStrategy(UberCasino::Strategy::Strat::LOOKUP);
 	(void)(v);
 }
 
+/**
+ * Purpose: Generates a window to play a blackjack game.
+ * Displays buttons to increase the bet, hit, stand, double down, and clear the bet.
+ * Contains radio buttons for the playing styles, the default option is manual.
+ * Displays text boxes with wallet and bet amounts, and the players' and dealer's cards
+ */
 void playButton_callback(Fl_Widget*, void* a)
 {
 	(void)(a);
@@ -351,8 +397,6 @@ void playButton_callback(Fl_Widget*, void* a)
 	money->buffer(tmbuff);
 	int stable_sizeM = sizeof(stable)/sizeof(stable[0]);
 	money->highlight_data(smbuff, stable, stable_sizeM, 'A', 0, 0);
-
-
 
 	tmbuff->text(purse.c_str());
 	smbuff->text("DDDDDDD");
@@ -523,18 +567,22 @@ void playButton_callback(Fl_Widget*, void* a)
 	});
 }
 
-
 /*================================================== E X I T ==================================================
 =============================================================================================================*/
+/**
+ * Purpose: Exits the home screen
+ */
 void exitButton_callback(Fl_Widget*, void* a)
 {
 	(void)(a);
 	startWindow.hide();
 }
 
-
 /*================================================== M A I N   W I N D O W ==================================================
 ===========================================================================================================================*/
+/**
+ * Purpose: Displays a screen with the options to play, how to, and exit
+ */
 int main()
 {
 	startWindow.color(0x00500000);
@@ -573,5 +621,4 @@ int main()
 	startWindow.show();
 
 	return Fl::run();
-
 }

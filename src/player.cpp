@@ -66,5 +66,4 @@ Strategy::Action Player::action(int a) {
 
 }
 
-
 }
