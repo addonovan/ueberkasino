@@ -4,7 +4,11 @@
 #include "suits.hpp"
 #include "values.hpp"
 #include <string>
+#include "UeberKasino.h"
+
+typedef UeberKasino::card_t UKCard;
 namespace UberCasino {
+
 
 class Card {
 
@@ -32,11 +36,31 @@ public:
    */
   std::string getSuit();
 
+  /**
+  *Returns the enum suit of the card
+  *@return the suit of the card (enum)
+  */
+  Suit _suit();
+
+  /**
+  *Returns the enum value of the card
+  *@return the value of the card (enum)
+  */
+  Value _value();
+
+  /**
+  *Converts a card to the card_t type in the idl
+  * @Return card_t of the selected card
+  */
+ UKCard to_ospl(Card plcard);
+
+
 private:
   const Suit suit;
 
   const Value value;
 };
+
 } /* UberCasino */
 
 #endif

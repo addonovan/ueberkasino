@@ -1,64 +1,61 @@
 #include "strategy.hpp"
+#include "hand.hpp"
 
 #include <vector>
-#include <string> // this will probably change
 #include <stdexcept>
 
-Strategy::Strategy() {
+namespace UberCasino {
+
+Strategy::Strategy()
+{
     _currentStrat = MANUAL;
+}
+
+Strategy::Strat Strategy::getCurrentStrat() {
+    return _currentStrat;
 }
 
 void Strategy::switchStrategy(Strat newStrat) {
     _currentStrat = newStrat;
 }
 
-std::string Strategy::makeMove(std::vector<UberCasino::Card> hand) {
+Strategy::Action Strategy::makeMove(UberCasino::Hand hand) {
     switch (_currentStrat) {
 
-        case MANUAL:
-            return "nothing";
+        case Strat::MANUAL:
+            return Action::DEFAULT;
 
-        case CONSERV:
+        case Strat::CONSERV:
             return conservativeMove(hand);
 
-        case LOOKUP:
+        case Strat::LOOKUP:
             return lookupMove(hand);
 
-        case COUNT:
-            return countingMove(hand);
-
-        case RECKLESS:
-            return recklessMove(hand);
+        case Strat::RECKLESS:
+            return recklessMove();
 
         default:
-            return "nothing";
+            return Action::DEFAULT;
     }
 }
 
-std::string Strategy::conservativeMove(std::vector<UberCasino::Card> hand) {
-    int value = 0;
-
-    for (UberCasino::Card card : hand) {
-        value += card.getValInt();
-    }
-
-    if (value > 12) 
-        return "Stand";
+Strategy::Action Strategy::conservativeMove(Hand hand) {
+    if (hand.handValue() > 12)
+        return STAND;
     else
-        return "Hit";
+        return HIT;
 }
 
-std::string Strategy::countingMove(std::vector<UberCasino::Card> hand) {
-    (void)(hand);
-    throw std::runtime_error{"I wasn't implemented :("};
+Strategy::Action Strategy::lookupMove(Hand hand) {
+           /* subtracting 8 gets the proper row index value into lookupTable
+              dealer value (column) currently set to 0, but should change
+                depending on how this method gets the dealers up card */
+    return lookupTable[ hand.handValue() - 8 ][ 0 ];
 }
 
-std::string Strategy::recklessMove(std::vector<UberCasino::Card> hand) {
-    (void)(hand);
-    return "Hit";
+/* Always hit */
+Strategy::Action Strategy::recklessMove() {
+    return HIT;
 }
 
-std::string Strategy::lookupMove(std::vector<UberCasino::Card> hand) {
-    (void)(hand);
-    throw std::runtime_error{"I wasn't implemented :("};
-}
+} /* UberCasino */

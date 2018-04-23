@@ -9,7 +9,6 @@
 #include <sstream>
 #include <network.hpp>
 #include <player.hpp>
-//using namespace UberCasino;
 
 Fl_Window startWindow(30, 30, 800, 600, "Über Kasino");
 std::string purse = "200";
@@ -34,7 +33,7 @@ void howButton_callback(Fl_Widget*, void* a)
 		{	FL_BLACK,		FL_HELVETICA,	18, 0u},
 	};
 
-	Fl_Window howWindow(30, 30, 800, 600, "How To");	
+	Fl_Window howWindow(30, 30, 800, 600, "How To");
 	howWindow.color(0x00500000);
 
 	Fl_Box *box = new Fl_Box(300, 10, 200, 50, "How to Play");
@@ -106,7 +105,7 @@ void bet1_callback(Fl_Widget*, void* v)
 
 	std::stringstream walletChange(purse);
 
-	walletChange >> purseG;	
+	walletChange >> purseG;
 	purseG -= 1;
 
 	std::stringstream purse;
@@ -131,21 +130,23 @@ void bet5_callback(Fl_Widget*, void* v)
 
 	std::stringstream walletChange(purse);
 
-	walletChange >> purseG;	
+	walletChange >> purseG;
 	purseG -= 5;
 
 	std::stringstream purse;
 	purse << purseG;
 	::purse = purse.str();
-	tmbuff->text(::purse.c_str());	
+	tmbuff->text(::purse.c_str());
 }
 
 void bet10_callback(Fl_Widget*, void* v)
+
 {
 	(void)(v);
 	std::stringstream betChange(betAmount);
 
 	betChange >> betAmountG;
+
 	betAmountG += 10;
 
 	std::stringstream betAmount;
@@ -156,13 +157,13 @@ void bet10_callback(Fl_Widget*, void* v)
 
 	std::stringstream walletChange(purse);
 
-	walletChange >> purseG;	
+	walletChange >> purseG;
 	purseG -= 10;
 
 	std::stringstream purse;
 	purse << purseG;
 	::purse = purse.str();
-	tmbuff->text(::purse.c_str());	
+	tmbuff->text(::purse.c_str());
 }
 
 void bet50_callback(Fl_Widget*, void* v)
@@ -171,6 +172,7 @@ void bet50_callback(Fl_Widget*, void* v)
 	std::stringstream betChange(betAmount);
 
 	betChange >> betAmountG;
+
 	betAmountG += 50;
 
 	std::stringstream betAmount;
@@ -181,13 +183,13 @@ void bet50_callback(Fl_Widget*, void* v)
 
 	std::stringstream walletChange(purse);
 
-	walletChange >> purseG;	
+	walletChange >> purseG;
 	purseG -= 50;
 
 	std::stringstream purse;
 	purse << purseG;
 	::purse = purse.str();
-	tmbuff->text(::purse.c_str());	
+	tmbuff->text(::purse.c_str());
 }
 
 void clear_callback(Fl_Widget*, void* v)
@@ -197,7 +199,7 @@ void clear_callback(Fl_Widget*, void* v)
 	std::stringstream betChange(betAmount);
 
 	walletChange >> purseG;
-	betChange >> betAmountG;	
+	betChange >> betAmountG;
 	purseG = purseG + betAmountG;
 
 	std::stringstream purse;
@@ -216,19 +218,46 @@ void clear_callback(Fl_Widget*, void* v)
 
 void hit_callback(Fl_Widget*, void* v)
 {
-	std::cout << "I hit\n";
+	player.action(1);
+  //player.addCard();
 	(void)(v);
 }
 
 void stand_callback(Fl_Widget*, void* v)
 {
-	std::cout << "I stand\n";
+  player.action(2);
+
 	(void)(v);
 }
 
 void dbldown_callback(Fl_Widget*, void* v)
 {
-	std::cout << "I double down\n";
+	player.action(3);
+	//player.addCard();
+	(void)(v);
+}
+
+void manual_callback(Fl_Widget*, void* v)
+{
+	player.chooseStrategy(UberCasino::Strategy::Strat::MANUAL);
+	(void)(v);
+}
+
+void conservative_callback(Fl_Widget*, void* v)
+{
+	player.chooseStrategy(UberCasino::Strategy::Strat::CONSERV);
+	(void)(v);
+}
+
+void reckless_callback(Fl_Widget*, void* v)
+{
+	player.chooseStrategy(UberCasino::Strategy::Strat::RECKLESS);
+	(void)(v);
+}
+
+void traditional_callback(Fl_Widget*, void* v)
+{
+player.chooseStrategy(UberCasino::Strategy::Strat::LOOKUP);
 	(void)(v);
 }
 
@@ -263,21 +292,21 @@ void playButton_callback(Fl_Widget*, void* a)
 	hitButton->color(FL_BLACK);
 	hitButton->labelcolor(FL_LIGHT1);
 	hitButton->labelfont(FL_BOLD);
-	hitButton->callback(hit_callback);	
+	hitButton->callback(hit_callback);
 
 	Fl_Button *standButton = new Fl_Button(650, 420, 60, 60, "STAND");
 	standButton->box(FL_OVAL_BOX);
 	standButton->color(FL_BLACK);
 	standButton->labelcolor(FL_LIGHT1);
 	standButton->labelfont(FL_BOLD);
-	standButton->callback(stand_callback);		
+	standButton->callback(stand_callback);
 
 	Fl_Button *dbldownButton = new Fl_Button(700, 470, 60, 60, "DBL\nDOWN");
 	dbldownButton->box(FL_OVAL_BOX);
 	dbldownButton->color(FL_BLACK);
 	dbldownButton->labelcolor(FL_LIGHT1);
 	dbldownButton->labelfont(FL_BOLD);
-	dbldownButton->callback(dbldown_callback);	
+	dbldownButton->callback(dbldown_callback);
 
 	/***************************************** P L A Y I N G   S T Y L E S ****************************************
 	**************************************************************************************************************/
@@ -291,30 +320,29 @@ void playButton_callback(Fl_Widget*, void* a)
 	manualButton->color(FL_BLACK);
 	manualButton->labelcolor(FL_BLACK);
 	manualButton->labelfont(FL_BOLD);
+	manualButton->callback(manual_callback);
+	manualButton->set();
 
 	Fl_Round_Button *conservativeButton = new Fl_Round_Button(625, 175, 20, 20, "Conservative");
 	conservativeButton->type(FL_RADIO_BUTTON);
 	conservativeButton->color(FL_BLACK);
 	conservativeButton->labelcolor(FL_BLACK);
 	conservativeButton->labelfont(FL_BOLD);
+	conservativeButton->callback(conservative_callback);
 
 	Fl_Round_Button *recklessButton = new Fl_Round_Button(625, 200, 20, 20, "Reckless");
 	recklessButton->type(FL_RADIO_BUTTON);
 	recklessButton->color(FL_BLACK);
 	recklessButton->labelcolor(FL_BLACK);
 	recklessButton->labelfont(FL_BOLD);
+	recklessButton->callback(reckless_callback);
 
 	Fl_Round_Button *traditionalButton = new Fl_Round_Button(625, 225, 20, 20, "Traditional");
 	traditionalButton->type(FL_RADIO_BUTTON);
 	traditionalButton->color(FL_BLACK);
 	traditionalButton->labelcolor(FL_BLACK);
-	traditionalButton->labelfont(FL_BOLD);	
-
-	Fl_Round_Button *countingButton = new Fl_Round_Button(625, 250, 20, 20, "Card Counting");
-	countingButton->type(FL_RADIO_BUTTON);
-	countingButton->color(FL_BLACK);
-	countingButton->labelcolor(FL_BLACK);
-	countingButton->labelfont(FL_BOLD);
+	traditionalButton->labelfont(FL_BOLD);
+	traditionalButton->callback(traditional_callback);
 
 	/***************************************** M O N E Y   D I S P L A Y S ****************************************
 	**************************************************************************************************************/
@@ -324,7 +352,8 @@ void playButton_callback(Fl_Widget*, void* a)
 	int stable_sizeM = sizeof(stable)/sizeof(stable[0]);
 	money->highlight_data(smbuff, stable, stable_sizeM, 'A', 0, 0);
 
-	std::cout << purse << std::endl;
+
+
 	tmbuff->text(purse.c_str());
 	smbuff->text("DDDDDDD");
 
@@ -335,7 +364,7 @@ void playButton_callback(Fl_Widget*, void* a)
 	bet->highlight_data(sbbuff, stable, stable_sizeB, 'A', 0, 0);
 
 	tbbuff->text(betAmount.c_str());
-	sbbuff->text("DDDDDDD");	
+	sbbuff->text("DDDDDDD");
 
 	/***************************************** B E T   I N C R E M E N T S ****************************************
 	**************************************************************************************************************/
@@ -364,7 +393,7 @@ void playButton_callback(Fl_Widget*, void* a)
 	bet50button->box(FL_SHADOW_BOX);
 	bet50button->color(FL_LIGHT1);
 	bet50button->labelcolor(FL_BLACK);
-	bet50button->labelfont(FL_BOLD);	
+	bet50button->labelfont(FL_BOLD);
 	bet50button->callback(bet50_callback);
 
 	Fl_Button *betClear = new Fl_Button(345, 355, 90, 45, "CLEAR BET");
@@ -392,7 +421,7 @@ void playButton_callback(Fl_Widget*, void* a)
 		sdbuff->text("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
 
 		/*+++++++++++++++++++++++++++++++ P L A Y E R +++++++++++++++++++++++++++++++
-		+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/	
+		+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 		Fl_Text_Display *dispPlayer = new Fl_Text_Display(315, 453, 175, 65);
 		Fl_Text_Buffer *tppbuff = new Fl_Text_Buffer();
 		Fl_Text_Buffer *sppbuff = new Fl_Text_Buffer();
@@ -431,7 +460,7 @@ void playButton_callback(Fl_Widget*, void* a)
 
 		std::string player2cards = "";
 		tp2buff->text(player2cards.c_str());
-		sp2buff->text("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");	
+		sp2buff->text("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
 
 		/*+++++++++++++++++++++++++++++++ P L A Y E R   3 +++++++++++++++++++++++++++++++
 		+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -444,7 +473,7 @@ void playButton_callback(Fl_Widget*, void* a)
 
 		std::string player3cards = "";
 		tp3buff->text(player3cards.c_str());
-		sp3buff->text("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");	
+		sp3buff->text("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
 
 		/*+++++++++++++++++++++++++++++++ P L A Y E R   4 +++++++++++++++++++++++++++++++
 		+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -457,7 +486,7 @@ void playButton_callback(Fl_Widget*, void* a)
 
 		std::string player4cards = "";
 		tp4buff->text(player4cards.c_str());
-		sp4buff->text("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");		
+		sp4buff->text("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
 
 		/*+++++++++++++++++++++++++++++++ P L A Y E R   5 +++++++++++++++++++++++++++++++
 		+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -470,7 +499,7 @@ void playButton_callback(Fl_Widget*, void* a)
 
 		std::string player5cards = "";
 		tp5buff->text(player5cards.c_str());
-		sp5buff->text("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");		
+		sp5buff->text("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
 
 		/*+++++++++++++++++++++++++++++++ P L A Y E R   6 +++++++++++++++++++++++++++++++
 		+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -483,12 +512,12 @@ void playButton_callback(Fl_Widget*, void* a)
 
 		std::string player6cards = "";
 		tp6buff->text(player6cards.c_str());
-		sp6buff->text("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");			
+		sp6buff->text("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
 
 
 	playWindow.end();
 	playWindow.show();
-	Fl::run();	
+	Fl::run();
 	Network::get().on_game_update([&](Game game){
 		(void)(game);
 	});
@@ -515,7 +544,6 @@ int main()
 	box->labelfont(FL_BOLD+FL_ITALIC+FL_HELVETICA);
 	box->labelsize(90);
 	box->labeltype(FL_SHADOW_LABEL);
-
 
 	Fl_Button *howButton = new Fl_Button(125, 300, 100, 100, "How To");
 	howButton->box(FL_DIAMOND_UP_BOX);
