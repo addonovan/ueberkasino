@@ -12,14 +12,14 @@
 #include <string>
 
 #include <DDSEntityManager.h>
-#include <UeberKasino.h>
-#include <UeberKasinoDcps.h>
-#include <UeberKasinoDcps_impl.h>
-#include <UeberKasinoSplDcps.h>
-#include <ccpp_UeberKasino.h>
+#include <UberCasino.h>
+#include <UberCasinoDcps.h>
+#include <UberCasinoDcps_impl.h>
+#include <UberCasinoSplDcps.h>
+#include <ccpp_UberCasino.h>
 
 using namespace DDS;
-using namespace UeberKasino;
+using namespace UberCasino;
 
 // Interfaces to the pub/sub network
 // this code is derived (copied!) from the opensplice examples
@@ -30,9 +30,9 @@ using namespace UeberKasino;
 //
 // thus, the reversion to the simplest static approach
 
-void _cb(UeberKasino::Player);
-void _cb(UeberKasino::Dealer);
-void _cb(UeberKasino::Game);
+void _cb( Player );
+void _cb( Dealer );
+void _cb( Game );
 
 template <typename DATA_READER_VAR, typename SEQ, typename MSG>
 class read_listener : public virtual DDS::DataReaderListener {

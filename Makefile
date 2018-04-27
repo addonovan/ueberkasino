@@ -10,7 +10,7 @@ OBJ         := obj
 IDL         := idl
 
 CXX         := g++
-CXXFLAGS    := -Wall -Wextra -Werror -g -std=c++11 \
+CXXFLAGS    := -Wall -Wextra -Werror -g -std=c++14 \
                `fltk-config --cxxflags`
 
 LINKER      := g++
@@ -32,10 +32,10 @@ IDLS		:= $(wildcard $(IDL)/*.idl)
 SRCS        := $(wildcard $(SRC)/*.$(EXT))
 SRCS        := $(filter-out $(MAIN), $(SRCS))
 SRCS        := $(filter-out $(FLTK_SRCS), $(SRCS))
-GEN_SRCS    := $(GEN_SRC)/UeberKasino.cpp \
-               $(GEN_SRC)/UeberKasinoDcps.cpp \
-               $(GEN_SRC)/UeberKasinoDcps_impl.cpp \
-               $(GEN_SRC)/UeberKasinoSplDcps.cpp
+GEN_SRCS    := $(GEN_SRC)/UberCasino.cpp \
+               $(GEN_SRC)/UberCasinoDcps.cpp \
+               $(GEN_SRC)/UberCasinoDcps_impl.cpp \
+               $(GEN_SRC)/UberCasinoSplDcps.cpp
 TEST_SRCS   := $(wildcard $(TEST)/*.$(EXT))
 
 OBJS        := $(patsubst $(SRC)/%.$(EXT), $(OBJ)/%.o, $(SRCS))

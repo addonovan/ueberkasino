@@ -1,41 +1,90 @@
-#ifndef PLAYER_H
-#define PLAYER_H
+#ifndef __PLAYER_HPP__
+#define __PLAYER_HPP__
 
-#include "card.hpp"
-#include "hand.hpp"
-#include "UeberKasino.h"
+#include <string>
+#include <memory>
+#include <iostream>
+
+#include <UberCasino.h>
+
 #include "strategy.hpp"
-#include <boost/thread.hpp>
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_generators.hpp>
-#include <boost/uuid/uuid_io.hpp>
+#include "serialize.hpp"
+#include "types.inl"
 
+namespace uc
+{
+    class Player : public Serializeable<net::Game, net::Player>
+    {
+        //
+        // Members
+        //
 
-namespace UberCasino {
+    private:
 
-typedef UeberKasino::PlayerState UKPlaystate;
-  class Player{
+        std::string m_uid;
+        
+        std::string m_game_uid;
 
-  public:
-    Hand getHand();                       //Getter for player hand
-    void addCard(Card card);              //Add a card to the players hand
-    void payout(int w);                   //Add money to players purse
-    void bet(int b);                      //Remove money from players purse
-    void chooseStrategy(Strategy::Strat); //Switch current strategy
-    Strategy::Action action(int a);       //The action the player will take [HIT, STAND, DOUBLE]
+        std::string m_name;
 
+        float m_balance;
 
+        int m_bet;
 
+        std::unique_ptr< Strategy > m_strategy;
 
-  private:
-    UKPlaystate m_net;      //Player state for networking
-    Strategy _currentStrategy; //the current strategy
-    Hand playerHand;          // the player's hand
-    int purse=200;            // The players total money
+        net::Card m_cards[ net::MAX_CARDS ];
 
-};
+        /** A copy of the last game we deserialized from. */
+        net::Game m_game;
 
+        //
+        // Con- & De- structors
+        //
 
-} /* UberCasino */
+    public:
 
-#endif
+        Player();
+
+        //
+        // Interface Actions
+        //
+
+    public:
+
+        template< class T >
+        void strategy( T* strategy )
+        {
+            m_strategy = std::unique_ptr< Strategy >{ strategy };
+        }
+
+        float balance() const;
+
+        void balance( float balance );
+
+        int bet() const;
+
+        void bet( int bet );
+
+        //
+        // Network Interfact
+        //
+
+    public:
+
+        void join( net::Dealer dealer );
+
+        //
+        // Serialize Implementation
+        //   
+
+    public:
+
+        void from( net::Game state ) override;
+
+        net::Player to() const override;
+
+    };
+}
+
+#endif // __PLAYER_HPP__
