@@ -40,3 +40,25 @@ namespace net
 
 #endif // __TYPES_NETWORK__
 #endif // _UBERCASINO_H_
+
+#ifdef Fl_H
+#ifndef __TYPES_FLTK__
+
+namespace fltk
+{
+    typedef Fl_Window           Window;
+    typedef Fl_Widget           Widget;
+    typedef Fl_Box              Box;
+
+    typedef Fl_Boxtype          BoxType;
+    typedef Fl_Color            Color;
+    typedef Fl_Font             Font;
+
+    typedef Fl_Text_Display     TextDisplay;
+    typedef Fl_Text_Buffer      TextBuffer;
+
+    typedef Fl_Text_Display::Style_Table_Entry StyleEntry;
+}
+
+#endif // __TYPES_FLTK__
+#endif // Fl_H

@@ -22,8 +22,6 @@ namespace uc
     private:
 
         std::string m_uid;
-        
-        std::string m_game_uid;
 
         std::string m_name;
 
@@ -36,7 +34,7 @@ namespace uc
         net::Card m_cards[ net::MAX_CARDS ];
 
         /** A copy of the last game we deserialized from. */
-        net::Game m_game;
+        net::Game* m_game = nullptr;
 
         //
         // Con- & De- structors
@@ -66,6 +64,8 @@ namespace uc
 
         void bet( int bet );
 
+        const net::Game* game() const;
+
         //
         // Network Interfact
         //
@@ -83,6 +83,15 @@ namespace uc
         void from( net::Game state ) override;
 
         net::Player to() const override;
+
+        //
+        // Operators
+        //
+
+    public:
+
+        bool operator == ( const net::PlayerState& other ) const;
+
 
     };
 }

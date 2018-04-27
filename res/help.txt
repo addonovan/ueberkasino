@@ -1,0 +1,22 @@
+"Blackjack starts with players making bets.\n"
+"Dealer deals 2 cards to the players face up\nand two to himself ( 1 card "
+"face up, the other face down ).\n\n"
+
+"Blackjack card values: Numerical cards count their face value in "
+"blackjack.\n"
+"Face cards count as 10 and the ace can count as either 1 or 11.\n"
+"The total of any hand is the sum of the card values in the hand.\n\n"
+
+"Players must decide whether to hit, stand, double down, or split.\n"
+"Hit: Take another card from the dealer.\n"
+"Stand: Keep your hand as it is.\n"
+"Double Down: Take only one more card from the dealer and double the "
+"orignal bet.\n"
+"Split: Split your orignal hand into two new hands.\n"
+"Can only split when the orignal hand contains two cards of the same "
+"value.\n\n"
+
+"The dealer acts last and must hit on 16 or less and stand on 17 through "
+"21.\n"
+"Players win when their hand totals higher than dealer’s hand,\nor they "
+"have 21 or less when the dealer busts\n"

@@ -4,6 +4,7 @@ INC         := include
 GEN         := gen
 GEN_SRC     := $(GEN)/src
 GEN_INC     := $(GEN)/include
+RES         := res
 SRC         := src
 TEST        := test
 OBJ         := obj
@@ -19,12 +20,12 @@ LFLAGS      := -L${OSPL_HOME}/lib \
 			   -lboost_system -lboost_thread \
 			   `fltk-config --ldflags`
 
-INCLUDE		:= -I$(INC) -I$(GEN_INC) \
+INCLUDE		:= -I$(INC) -I$(GEN_INC) -I. \
 			   -I${OSPL_HOME}/include/dcps/C++/SACPP/ \
 			   -I${OSPL_HOME}/include/sys \
 
 EXT         := cpp
-MAIN        := $(SRC)/mainwin.$(EXT)
+MAIN        := $(SRC)/main.$(EXT)
 TEST_FMT    := test_%
 
 IDLS		:= $(wildcard $(IDL)/*.idl)
@@ -63,6 +64,10 @@ test: build $(TEST_BINS)
 
 run: build
 	./$(BIN)/$(PRODUCT)
+.PHONY: run
+
+debug: build
+	gdb $(BIN)/$(PRODUCT)
 .PHONY: run
 
 

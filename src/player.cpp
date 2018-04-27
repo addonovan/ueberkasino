@@ -50,12 +50,22 @@ namespace uc
         m_bet = bet;
     }
 
+    const net::Game*
+    Player::game() const
+    {
+        return m_game;
+    }
+
     void 
     Player::join( net::Dealer dealer )
     {
+        // create a new game that we'll be joining
+        delete m_game;
+        m_game = new net::Game;
+
         // copy the game uid from that, then we'll need to publish our
         // updated selves to the network
-        m_game_uid = std::string{ dealer.game_uid, net::UUID_LENGTH };
+        memcpy( m_game->game_uid, dealer.game_uid, net::UUID_LENGTH );
 
         net::Player packet = to();
         packet.A = net::Action::idle;
@@ -66,18 +76,19 @@ namespace uc
     void
     Player::from( net::Game state )
     {
-        // copy the game uid out of the structure
-        std::string game_uid{ state.game_uid, net::UUID_LENGTH };
-
-        // if this is a message for another game, then let's ignore it
-        if ( game_uid != m_game_uid )
+        // if we aren't in a game, then completely ignore this
+        if ( m_game == nullptr )
             return;
+
+        // we're guaranteed to be looking at the right game, but let's just check
+        if ( strncmp( state.game_uid, m_game->game_uid, net::UUID_LENGTH ) )
+            throw new runtime_error{ "Game UID does not match expected UID!" };
 
         // try to find our player's uid in the list
         for ( auto i = 0u; i < net::MAX_PLAYERS; i++ )
         {
             // if our uid doesn't match, then we'll just this entry
-            std::string player_uid{ state.p[i].uid, net::UUID_LENGTH };
+            std::string player_uid{ state.p[ i ].uid, net::UUID_LENGTH };
             if ( player_uid != m_uid )
                 continue;
 
@@ -85,7 +96,7 @@ namespace uc
             // so we'll just copy the cards out of the player state and save
             // the game state
             memcpy( m_cards, state.p[i].cards, net::MAX_CARDS );
-            m_game = state;
+            *m_game = state;
             return;
         }
 
@@ -104,13 +115,19 @@ namespace uc
         copy.count = 0; // TODO figure out what this actually means
         memcpy( copy.name, m_name.c_str(), net::UUID_LENGTH );
         memcpy( copy.uid, m_uid.c_str(), net::UUID_LENGTH );
-        memcpy( copy.game_uid, m_game_uid.c_str(), net::UUID_LENGTH );
+        memcpy( copy.game_uid, m_game->game_uid, net::UUID_LENGTH );
         copy.balance = m_balance;
 
         // let the strategy determine what we should do
-        copy.A = m_strategy->process( m_uid.c_str(), m_game );
+        copy.A = m_strategy->process( m_uid.c_str(), *m_game );
 
         return copy;
+    }
+
+    bool 
+    Player::operator == ( const net::PlayerState& other ) const
+    {
+        return strncmp( other.uid, m_uid.c_str(), net::UUID_LENGTH ) == 0;
     }
 
 }
