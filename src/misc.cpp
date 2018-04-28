@@ -25,7 +25,7 @@ namespace uc
                 << std::endl;
         }
 
-        return out.str();
+       return out.str();
     }
 
     std::string

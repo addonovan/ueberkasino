@@ -1,6 +1,8 @@
 # vim turds
 *.sw[a-zA-Z]
 
+ospl-*.log
+
 # sublime shit
 *.sublime-project
 *.sublime-workspace

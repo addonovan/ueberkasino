@@ -10,7 +10,8 @@
 namespace uc
 {
 
-    GameWindow::GameWindow()
+    GameWindow::GameWindow( Game& game )
+        : m_game{ game }
     {
         static GameWindow* self = this;
 
@@ -26,24 +27,18 @@ namespace uc
         // Create the Hit, Stand, Double Down buttons
         //
 
-#define CREATE_ACTION_BUTTON( button_name, cb )\
+#define CREATE_ACTION_BUTTON( button_name, action )\
         ( button_name ).box( FL_OVAL_BOX )\
             .background( FL_BLACK )\
             .foreground( FL_LIGHT1 )\
             .font( FL_BOLD )\
-            .callback( []( fltk::Widget*, void* ) cb )
+            .callback( []( fltk::Widget*, void* ) {\
+                self->m_game.on_action_picked( action );\
+            } )
 
-        CREATE_ACTION_BUTTON( m_btn_hit, {
-            self->send_action( net::Action::hitting );
-        } );
-
-        CREATE_ACTION_BUTTON( m_btn_stand, {
-            self->send_action( net::Action::standing );
-        } );
-
-        CREATE_ACTION_BUTTON( m_btn_double, {
-            self->send_action( net::Action::doubling );
-        } );
+        CREATE_ACTION_BUTTON( m_btn_hit, net::Action::hitting ); 
+        CREATE_ACTION_BUTTON( m_btn_stand, net::Action::standing );
+        CREATE_ACTION_BUTTON( m_btn_double, net::Action::doubling );
 
 #undef CREATE_ACTION_BUTTON
 
@@ -51,31 +46,24 @@ namespace uc
         // Create the Manual, Reckless, etc. Buttons
         //
 
-#define CREATE_STRATEGY_BUTTON( button_name, cb )\
+#define CREATE_STRATEGY_BUTTON( button_name, class )\
         ( button_name ).type( FL_RADIO_BUTTON )\
             .background( FL_BLACK )\
             .foreground( FL_BLACK )\
             .font( FL_BOLD )\
-            .callback( []( fltk::Widget*, void* ) cb )
+            .callback( []( fltk::Widget*, void* ) {\
+                self->m_game.on_strategy_changed( new class );\
+            } )
 
-        CREATE_STRATEGY_BUTTON( m_btn_manual, {
-            self->m_player.strategy( new uc::ManualStrategy );
-        } ).raw_action( []( Fl_Button* btn ) {
-            btn->set();
-        } );
-        m_player.strategy( new uc::ManualStrategy );
+        CREATE_STRATEGY_BUTTON( m_btn_manual, uc::ManualStrategy )
+            .raw_action( []( Fl_Button* btn ) {
+                btn->set();
+            } );
+        m_game.on_strategy_changed( new uc::ManualStrategy );
 
-        CREATE_STRATEGY_BUTTON( m_btn_conservative, {
-            self->m_player.strategy( new uc::ConservativeStrategy );
-        } );
-
-        CREATE_STRATEGY_BUTTON( m_btn_reckless, {
-            self->m_player.strategy( new uc::RecklessStrategy );
-        } );
-
-        CREATE_STRATEGY_BUTTON( m_btn_basic, {
-            self->m_player.strategy( new uc::BasicStrategy );
-        } );
+        CREATE_STRATEGY_BUTTON( m_btn_conservative, uc::ConservativeStrategy );
+        CREATE_STRATEGY_BUTTON( m_btn_reckless, uc::RecklessStrategy );
+        CREATE_STRATEGY_BUTTON( m_btn_basic, uc::BasicStrategy );
 
 #undef CREATE_STRATEGY_BUTTON
 
@@ -102,7 +90,7 @@ namespace uc
             .foreground( FL_BLACK )
             .font( FL_BOLD )
             .callback( []( fltk::Widget*, void* ) {
-                self->change_bet( -self->m_player.bet() );
+                self->change_bet( -self->m_game.player().bet() );
             } );
 
 #undef CREATE_BET_BUTTON
@@ -139,10 +127,11 @@ namespace uc
         m_window.end();
         m_window.show();
 
-        Network::get().on_game_update( []( Game game ) {
+        Network::get().on_game_update( []( net::Game game ) {
             self->on_game_update( game ); 
         } );
-        Network::get().on_dealer_update( []( Dealer dealer ) {
+
+        Network::get().on_dealer_update( []( net::Dealer dealer ) {
             self->on_dealer_update( dealer );
         } );
 
@@ -152,72 +141,31 @@ namespace uc
         Fl::run();
     }
 
-    GameWindow::~GameWindow()
-    {
-        // deleting a nullptr is A-OK in C++
-        delete m_partial_response;
-    }
+    GameWindow::~GameWindow() = default;
 
     void
     GameWindow::change_bet( int delta )
     {
-        m_player.bet( m_player.bet() + delta );
-        
-        m_bet.text( std::to_string( m_player.bet() ) );
-        m_balance.text( std::to_string( ( int ) m_player.balance() ) );
-    }
-
-    void
-    GameWindow::send_action( net::Action action )
-    {
-        if ( m_partial_response == nullptr )
-            return;
-
-        m_partial_response->A = action;
-        Network::get().send( *m_partial_response );
-
-        delete m_partial_response;
-        m_partial_response = nullptr;
+        m_game.on_bet_changed( delta );
+       
+        auto& player = m_game.player(); 
+        m_bet.text( std::to_string( player.bet() ) );
+        m_balance.text( std::to_string( ( int ) player.balance() ) );
     }
 
     void
     GameWindow::on_game_update( net::Game game )
     {
-        // if we aren't in a game yet, just ignore it
-        if ( m_player.game() == nullptr )
-            return;
-
-        // if the game doesn't match, then don't bother
-        if ( strncmp( game.game_uid, m_player.game()->game_uid, net::UUID_LENGTH ) != 0 )
-            return;
-
-        // update the player's status
-        m_player.from( game );
-
-        // now, let's update all of the displays for cards and such,
-        // and just treat the dealer and player as special cases
-        auto pos = 0;
-        for ( auto i = 0; i < net::MAX_PLAYERS; i++ )
-        {
-            net::PlayerState player = m_player.game()->p[ i ];
-
-            // update our cards if we come across ourselves, otherwise, update
-            // the next player's
-            ( m_player == player ? m_player_display : m_player_displays[ pos++ ] )
-                .text( to_string( player.cards ) );
-        }
-
-        m_dealer_display.text( to_string( m_player.game()->dealer_cards ) );
+        m_game.on_game_update( game );
+        // TODO also update all of the card displays to whatever the game
+        // says they should be
     }
 
     void
     GameWindow::on_dealer_update( net::Dealer dealer )
     {
-        // ignore dealer updates if we're already in a game
-        if ( m_player.game() != nullptr )
-            return;
-
-        m_player.join( dealer );
+        m_game.on_dealer_update( dealer );
+        // TODO also show the dealer's name if the game is connected correctly
     }
 
 }

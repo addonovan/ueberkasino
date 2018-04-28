@@ -1,6 +1,7 @@
 #include <title_window.hpp>
 #include <game_window.hpp>
 #include <help_window.hpp>
+#include <game.hpp>
 
 namespace uc
 {
@@ -28,7 +29,8 @@ namespace uc
             .foreground( FL_LIGHT1 )
             .font( FL_BOLD )
             .callback( []( fltk::Widget*, void* ) {
-                GameWindow game;
+                Game game;
+                GameWindow game_win{ game };
             } );
 
         m_btn_exit.box( FL_DIAMOND_UP_BOX )

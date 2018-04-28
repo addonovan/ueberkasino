@@ -7,12 +7,10 @@
 void _cb( net::Player player ) 
 {
     ( void )( player );
-    std::cout << "received player callback" << std::endl;
 }
 
 void _cb( net::Dealer dealer )
 { 
-    std::cout << "received dealer callback" << std::endl;
     on_receive( uc::Network::get(), dealer ); 
 }
 

@@ -13,6 +13,8 @@ namespace net
     /** A networked game state. */
     typedef UberCasino::Game               Game;
 
+    typedef UberCasino::game_state         GameState;
+
     /** A networked player state. */
     typedef UberCasino::PlayerState        PlayerState;
 

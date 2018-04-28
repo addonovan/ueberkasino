@@ -17,7 +17,8 @@ namespace uc
           m_name{ "Austin Donovan" },
           m_balance{ 200.0f },
           m_bet{ 0 },
-          m_strategy{ nullptr }
+          m_strategy{ nullptr },
+          m_game{ nullptr }
     {
         // make sure it's the correct length for the uid
         m_uid.erase( 0, net::UUID_LENGTH );
@@ -71,6 +72,16 @@ namespace uc
         packet.A = net::Action::idle;
 
         Network::get().send( packet );
+    }
+
+    void
+    Player::leave()
+    {
+        // do nothing if we haven't joined any game at all
+        if ( m_game == nullptr )
+            return;
+
+
     }
 
     void

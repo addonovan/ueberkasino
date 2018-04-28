@@ -4,6 +4,7 @@
 #include <UberCasino.h>
 
 #include "player.hpp"
+#include "game.hpp"
 #include "fltk.hpp"
 #include "types.inl"
 
@@ -18,9 +19,7 @@ namespace uc
 
     private:
 
-        Player m_player;
-
-        net::Player* m_partial_response = nullptr;
+        Game& m_game;
 
         fltk::Window m_window{ 30, 30, 800, 600, "Black Jack" };
 
@@ -37,8 +36,12 @@ namespace uc
         fltk::RadioButton m_btn_reckless{       625, 200, 20, 20, "Reckless" };
         fltk::RadioButton m_btn_basic{          625, 225, 20, 20, "Traditional" };
 
-        fltk::Label m_balance{  600, 300, 160, 50, std::to_string( m_player.balance() ) };
-        fltk::Label m_bet{      315, 255, 160, 50, std::to_string( m_player.bet() ) };
+        fltk::Label m_balance{  600, 300, 160, 50, 
+            std::to_string( m_game.player().balance() )
+        };
+        fltk::Label m_bet{      315, 255, 160, 50,
+            std::to_string( m_game.player().bet() )
+        };
 
         fltk::Button m_btn_bet_1{       295, 315, 45, 30, "$1" };
         fltk::Button m_btn_bet_5{       345, 315, 45, 30, "$5" };
@@ -64,7 +67,7 @@ namespace uc
 
     public:
 
-        GameWindow();
+        GameWindow( Game& game );
 
         ~GameWindow();
 

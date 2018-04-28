@@ -34,7 +34,7 @@ namespace uc
         net::Card m_cards[ net::MAX_CARDS ];
 
         /** A copy of the last game we deserialized from. */
-        net::Game* m_game = nullptr;
+        net::Game* m_game;
 
         //
         // Con- & De- structors
@@ -73,6 +73,8 @@ namespace uc
     public:
 
         void join( net::Dealer dealer );
+
+        void leave();
 
         //
         // Serialize Implementation

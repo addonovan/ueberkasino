@@ -80,10 +80,11 @@ namespace uc
          * Dispatches the network's game callback handler with the received
          * message.
          */
-        friend void on_receive( const Network& net, Game game )
+        friend void on_receive( const Network& net, net::Game game )
         {
-            if (net.m_game_cb) {
-                net.m_game_cb(game);
+            if ( net.m_game_cb ) 
+            {
+                net.m_game_cb( game );
             }
         }
 
@@ -91,7 +92,7 @@ namespace uc
          * Dispatches the network's dealer callback handler with the received
          * message.
          */
-        friend void on_receive( const Network& net, Dealer dealer )
+        friend void on_receive( const Network& net, net::Dealer dealer )
         {
             if ( net.m_dealer_cb )
             {
