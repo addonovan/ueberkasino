@@ -11,11 +11,18 @@
 namespace uc
 {
 
+    /**
+     * Displays information which the user could need if they
+     * have never played blackjack before.
+     */
     class HelpWindow
     {
         
     public:
 
+        /**
+         * Shows the help window to the user.
+         */
         static void show();
 
     };

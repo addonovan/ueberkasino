@@ -9,10 +9,18 @@
 namespace uc
 {
 
+    /**
+     * The main/title screen which allows the user to start a new game,
+     * open a help window, or exit the game.
+     */
     class TitleWindow
     {
+
     public:
 
+        /**
+         * Shows the title window.
+         */
         static void show();
 
     };

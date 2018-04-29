@@ -9,10 +9,19 @@
 namespace uc
 {
 
+    /**
+     * Converts the given hand of `cards` into a string.
+     */
     std::string to_string( const net::Card cards[ net::MAX_CARDS ] );
 
+    /**
+     * Converts the given `suit` into a string.
+     */
     std::string to_string( net::Suit suit );
 
+    /**
+     * Converst the given card value/`kind` into a string.
+     */
     std::string to_string( net::CardKind kind );
 
 }

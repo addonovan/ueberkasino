@@ -13,11 +13,12 @@ namespace uc
     {
 
     public:
+
         /**
          * Processes the given state of the `game`, and determines which
          * action the user with the given `uuid` should perform.
          */
-        virtual net::Action process( const char* uuid, const net::Game& game) const = 0;
+        virtual net::Action process( const char* uuid, const net::Game& game ) const = 0;
     };
 
     /**
@@ -25,7 +26,11 @@ namespace uc
      */
     class RecklessStrategy : public Strategy
     {
-        net::Action process( const char* uuid, const net::Game& game) const;
+        /**
+         * Ignores both `uuid` and the current state of the `game` and ALWAYS
+         * hits.
+         */
+        net::Action process( const char* uuid, const net::Game& game ) const;
     };
 
     /**
@@ -34,7 +39,11 @@ namespace uc
      */
     class ConservativeStrategy : public Strategy
     {
-        net::Action process( const char* uuid, const net::Game& game) const;
+        /**
+         * Uses the player's `uuid` to determine their cards in the current
+         * `game` and will hit ONLY if there is NO possibility of ever busting.
+         */
+        net::Action process( const char* uuid, const net::Game& game ) const;
     };
 
     /**
@@ -42,7 +51,13 @@ namespace uc
      */
     class BasicStrategy : public Strategy
     {
-        net::Action process( const char* uuid, const net::Game& game) const;
+        /**
+         * Uses the current state of the game along with the current player's
+         * hand to determine what action to do next. This will emply so-called
+         * "basic blackjack strategy" in the form of a look-up table to perform
+         * the most "optimal" move on average.
+         */
+        net::Action process( const char* uuid, const net::Game& game ) const;
     };
 
     /**
@@ -52,7 +67,13 @@ namespace uc
      */
     class ManualStrategy : public Strategy
     {
-        net::Action process( const char* uuid, const net::Game& game) const;
+        /**
+         * Will always completely ignore the `uuid` and `game` parameters and
+         * simply return `net::Action::idle` to signify to the UI and Game
+         * state machine that manual intervention is needed to complete a
+         * turn.
+         */
+        net::Action process( const char* uuid, const net::Game& game ) const;
     };
 }
 

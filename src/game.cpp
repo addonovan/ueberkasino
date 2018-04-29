@@ -283,22 +283,27 @@ namespace uc
     }
 
     void
-    Game::transition( GameState tag )
+    Game::transition( GameState state )
     {
         LockGuard lock{ m_state_mtx };
 
+#ifdef DEBUG
         std::cout << "TRANSITION  " 
             << std::setw( 20 ) << STATE_NAMES[ m_state ] 
             << " => "
-            << STATE_NAMES[ tag ] << std::endl;
+            << STATE_NAMES[ state ] << std::endl;
+#endif
 
-        m_state = tag;
+        m_state = state;
     }
 
     void
     Game::on_timeout()
     {
+#ifdef DEBUG
         std::cout << "TIMEOUT" << std::endl;
+#endif
+
         transition( GameState::HandOver );
     }
 

@@ -13,7 +13,14 @@
 
 namespace uc
 {
-    class Player : public Serializeable<net::Game, net::Player>
+
+    /**
+     * A player object in the game.
+     *
+     * This can be deserialized from a `net::Game` structure, and reserialized
+     * into a `net::Player` structure.
+     */
+    class Player : public Serializeable< net::Game, net::Player >
     {
         //
         // Members
@@ -21,27 +28,36 @@ namespace uc
 
     private:
 
+        /** This player's unique identifier */
         std::string m_uid;
 
+        /** The name of this player, a constant as "Austin Donovan" */
         std::string m_name;
 
+        /** The player's current balance */
         float m_balance;
 
+        /** The player's current bet */
         int m_bet;
 
+        /** A managed pointer to the current strategy the player is employing */
         std::unique_ptr< Strategy > m_strategy;
 
+        /** This player's current hand */
         net::Card m_cards[ net::MAX_CARDS ];
 
         /** A copy of the last game we deserialized from. */
         net::Game* m_game;
 
         //
-        // Con- & De- structors
+        // Constructor
         //
 
     public:
 
+        /**
+         * Constructs a new player with `200` as a balance and `0` as a bet.
+         */
         Player();
 
         //
@@ -50,30 +66,59 @@ namespace uc
 
     public:
 
+        /**
+         * Changes this player's `strategy`.
+         *
+         * This should be an unmanaged pointer, as this will be wrapped in
+         * a `unique_ptr`.
+         */
         template< class T >
         void strategy( T* strategy )
         {
             m_strategy = std::unique_ptr< Strategy >{ strategy };
         }
 
+        /**
+         * Gets the current `balance` of the player.
+         */
         float balance() const;
 
+        /**
+         * Sets the player's `balance`.
+         */
         void balance( float balance );
 
+        /**
+         * Gets the current `bet` of the player.
+         */
         int bet() const;
 
+        /**
+         * Sets the player's `bet`.
+         */
         void bet( int bet );
 
+        /**
+         * A possibly null constant pointer to the current game.
+         *
+         * This is managed by this class, so DO NOT delete this.
+         */
         const net::Game* game() const;
 
         //
-        // Network Interfact
+        // Network Interface
         //
 
     public:
 
+        /**
+         * Joins a `dealer`'s table.
+         */
         void join( net::Dealer dealer );
 
+        /**
+         * Leave's the current table, if the player is even seated at one.
+         */
         void leave();
 
         //
@@ -82,8 +127,17 @@ namespace uc
 
     public:
 
+        /**
+         * Deserializes a player from the given game `state`, under the
+         * assumption that the game corresponds to one where the player
+         * *is* seated.
+         */
         void from( net::Game state ) override;
 
+        /**
+         * Converts this player to a network packet, after using the
+         * current strategy to determine what action should be taken.
+         */
         net::Player to() const override;
 
         //
@@ -92,6 +146,10 @@ namespace uc
 
     public:
 
+        /**
+         * Checks if this player and the `other` player state have the same
+         * UID.
+         */
         bool operator == ( const net::PlayerState& other ) const;
 
 

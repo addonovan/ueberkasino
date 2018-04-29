@@ -10,9 +10,10 @@
  */
 namespace net
 {
-    /** A networked game state. */
+    /** A networked game packet. */
     typedef UberCasino::Game               Game;
 
+    /** A networked game state. */
     typedef UberCasino::game_state         GameState;
 
     /** A networked player state. */
@@ -24,18 +25,25 @@ namespace net
     /** A dealer structure sent over the network. */
     typedef UberCasino::Dealer             Dealer;
 
+    /** A combinatino of the suit and card kind */
     typedef UberCasino::card_t             Card;
 
+    /** An enum representing the four suits of cards. */
     typedef UberCasino::suite_t            Suit;
 
+    /** An enum representing the 13 types of cards. */
     typedef UberCasino::card_kind          CardKind;
 
+    /** An enum representing the actions a player can take. */
     typedef UberCasino::player_action_t    Action;
 
+    /** The length of a single UUID. */
     constexpr long int UUID_LENGTH = UberCasino::SIZE_OF_UUID;
 
+    /** The maximum number of players who can be in a single game at one time */
     constexpr long int MAX_PLAYERS = UberCasino::MAX_PLAYERS_IN_A_GAME;
 
+    /** The maximum number of cards a single player can hold. */
     constexpr long int MAX_CARDS = UberCasino::MAX_CARDS_PER_PLAYER;
 
 }
@@ -46,6 +54,9 @@ namespace net
 #ifdef Fl_H
 #ifndef __TYPES_FLTK__
 
+/**
+ * A namespace whose sole purpose to eliminate writing the `Fl_` prefix.
+ */
 namespace fltk
 {
     typedef Fl_Window           Window;
