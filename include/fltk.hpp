@@ -29,6 +29,8 @@ namespace fltk
     private:
         std::unique_ptr< T > m_button;
 
+        std::vector< void* > m_user_data;
+
     public:
         RawButton( int x, int y, int width, int height, const std::string& text )
           : m_button{ new T{ x, y, width, height, text.c_str() } }
@@ -70,6 +72,14 @@ namespace fltk
         RawButton< T >& callback( F cb )
         {
             m_button->callback( cb );
+            return *this;
+        }
+
+        template< typename U >
+        RawButton< T >& add_user_data( U* data )
+        {
+            m_user_data.push_back( reinterpret_cast< void* >( data ) ); 
+            m_button->user_data( reinterpret_cast< void* >( &m_user_data ) );
             return *this;
         }
 

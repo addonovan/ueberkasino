@@ -6,34 +6,51 @@
 namespace uc
 {
 
-    TitleWindow::TitleWindow()
+    void
+    TitleWindow::show()
     {
-        m_window.begin();
-        m_window.color( 0x00500000 );
+        //
+        // Initialize all Components 
+        //
 
-        m_box->box( FL_NO_BOX );
-        m_box->labelfont( FL_BOLD + FL_ITALIC + FL_HELVETICA );
-        m_box->labelsize( 90 );
-        m_box->labeltype( FL_SHADOW_LABEL );
+        fltk::Window window{ 30, 30, 800, 600, "Über Kasino" };
+        
+        fltk::Box* box = new fltk::Box{ 250, 60, 300, 100, "Über Kasino!" };
 
-        m_btn_howto.box( FL_DIAMOND_UP_BOX )
+        fltk::Button btn_howto{ 125, 300, 100, 100, "How To" };
+        fltk::Button btn_play{ 350, 300, 100, 100, "Play" }; 
+        fltk::Button btn_exit{ 575, 300, 100, 100, "Exit" };
+
+        //
+        // Lay out window
+        //
+
+        window.begin();
+        window.color( 0x00500000 );
+
+        box->box( FL_NO_BOX );
+        box->labelfont( FL_BOLD + FL_ITALIC + FL_HELVETICA );
+        box->labelsize( 90 );
+        box->labeltype( FL_SHADOW_LABEL );
+
+        btn_howto.box( FL_DIAMOND_UP_BOX )
             .background( FL_BLACK )
             .foreground( FL_LIGHT1 )
             .font( FL_BOLD )
             .callback( []( fltk::Widget*, void* ) {
-		HelpWindow help;
+                HelpWindow::show();
             } );
 
-        m_btn_play.box( FL_DIAMOND_UP_BOX )
+        btn_play.box( FL_DIAMOND_UP_BOX )
             .background( FL_DARK_RED )
             .foreground( FL_LIGHT1 )
             .font( FL_BOLD )
             .callback( []( fltk::Widget*, void* ) {
                 Game game;
-                GameWindow game_win{ game };
+                GameWindow::show( game );
             } );
 
-        m_btn_exit.box( FL_DIAMOND_UP_BOX )
+        btn_exit.box( FL_DIAMOND_UP_BOX )
             .background( FL_BLACK )
             .foreground( FL_LIGHT1 )
             .font( FL_BOLD )
@@ -41,8 +58,12 @@ namespace uc
                 exit( 0 );
             } );
 
-        m_window.end();
-        m_window.show();
+        //
+        // Show the window
+        //
+
+        window.end();
+        window.show();
         Fl::run();
     }
 

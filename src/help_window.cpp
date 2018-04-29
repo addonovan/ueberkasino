@@ -11,20 +11,43 @@ const char* style =
 namespace uc
 {
 
-    HelpWindow::HelpWindow()
+    void
+    HelpWindow::show()
     {
-		m_window.begin();
+        //
+        // Create components
+        //
 
-        m_box->box( FL_NO_BOX );
-        m_box->labelfont( FL_BOLD + FL_HELVETICA );
-        m_box->labelsize( 20 );
+        fltk::Window window{ 30, 30, 800, 600, "How To" }; 
+        fltk::Box* box = new fltk::Box{ 300, 10, 200, 50, "How to Play" };
+        fltk::Label tutorial{ 20, 60, 760, 520 };
 
-        m_tutorial.style_table( m_style_table )
+        std::vector< fltk::StyleEntry > style_table = {
+            { FL_BOLD,      FL_HELVETICA, 18, 0u },
+            { FL_ITALIC,    FL_HELVETICA, 18, 0u },
+            { FL_BLACK,     FL_HELVETICA, 18, 0u }, 
+        };
+
+        //
+        // Lay out window
+        //
+
+		window.begin();
+
+        box->box( FL_NO_BOX );
+        box->labelfont( FL_BOLD + FL_HELVETICA );
+        box->labelsize( 20 );
+
+        tutorial.style_table( style_table )
 			.text( text )
 			.style( style );
 
-		m_window.end();
-		m_window.show();
+        //
+        // Show the window
+        //
+
+		window.end();
+		window.show();
 
 		Fl::run();
     }

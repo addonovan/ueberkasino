@@ -12,7 +12,8 @@ IDL         := idl
 
 CXX         := g++
 CXXFLAGS    := -Wall -Wextra -Werror -g -std=c++14 \
-               `fltk-config --cxxflags`
+               `fltk-config --cxxflags` \
+			   -DDEBUG
 
 LINKER      := g++
 LFLAGS      := -L${OSPL_HOME}/lib \
