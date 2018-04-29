@@ -77,11 +77,8 @@ namespace uc
     void
     Player::leave()
     {
-        // do nothing if we haven't joined any game at all
-        if ( m_game == nullptr )
-            return;
-
-
+        delete m_game;
+        m_game = nullptr;
     }
 
     void

@@ -2,6 +2,7 @@
 #define __MISC_HPP__
 
 #include <string>
+
 #include <UberCasino.h>
 #include "types.inl"
 
