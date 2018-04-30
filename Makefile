@@ -1,4 +1,5 @@
 PRODUCT     := uk
+TEST_PROD   := test_uk
 BIN         := bin
 INC         := include
 GEN         := gen
@@ -28,33 +29,35 @@ INCLUDE		:= -I$(INC) -I$(GEN_INC) -I. \
 EXT         := cpp
 MAIN        := $(SRC)/main.$(EXT)
 TEST_FMT    := test_%
+TEST_MAIN   := $(TEST)/main.$(EXT)
 
 IDLS		:= $(wildcard $(IDL)/*.idl)
 
 SRCS        := $(wildcard $(SRC)/*.$(EXT))
 SRCS        := $(filter-out $(MAIN), $(SRCS))
-SRCS        := $(filter-out $(FLTK_SRCS), $(SRCS))
 GEN_SRCS    := $(GEN_SRC)/UberCasino.cpp \
                $(GEN_SRC)/UberCasinoDcps.cpp \
                $(GEN_SRC)/UberCasinoDcps_impl.cpp \
                $(GEN_SRC)/UberCasinoSplDcps.cpp
+
 TEST_SRCS   := $(wildcard $(TEST)/*.$(EXT))
+TEST_SRCS   := $(filter-out $(TEST_MAIN), $(TEST_SRCS))
 
 OBJS        := $(patsubst $(SRC)/%.$(EXT), $(OBJ)/%.o, $(SRCS))
 GEN_OBJS    := $(patsubst $(GEN_SRC)/%.$(EXT), $(OBJ)/%.o, $(GEN_SRCS))
-OBJS        := $(GEN_OBJS) $(FLTK_SRCS) $(OBJS)
-MAIN_OBJ    := $(patsubst $(SRC)/%.$(EXT), $(OBJ)/%.o, $(MAIN))
-FLTK_OBJ    := $(OBJ)/fltk.o
+OBJS        := $(GEN_OBJS) $(OBJS)
+TEST_OBJS   := $(patsubst $(TEST)/%.$(EXT), $(OBJ)/$(TEST_FMT), $(TEST_SRCS))
 
-TEST_BINS	:= $(patsubst $(TEST)/%.$(EXT), $(BIN)/$(TEST_FMT), $(TEST_SRCS))
+MAIN_OBJ    := $(patsubst $(SRC)/%.$(EXT), $(OBJ)/%.o, $(MAIN))
+TEST_OBJ    := $(patsubst $(TEST)/%.$(EXT), $(OBJ)/$(TEST_FMT).o, $(TEST_MAIN))
 
 
 ################################################################################
 # EXECUTABLES																   #
 ################################################################################
 
-test: build $(TEST_BINS)
-	gdb bin/test_game
+test: test_build 
+	./$(BIN)/$(TEST_PROD)
 .PHONY: test
 
 run: build
@@ -70,7 +73,7 @@ debug: build
 # BUILDING																	   #
 ################################################################################
 
-test_build: prebuild $(OBJS) $(TEST_BINS)
+test_build: prebuild $(BIN)/$(TEST_PROD)
 .PHONY: test_build
 
 build: prebuild $(BIN)/$(PRODUCT)
@@ -85,10 +88,16 @@ $(MAIN_OBJ): $(MAIN)
 $(OBJ)/%.o: $(SRC)/%.$(EXT)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
 
-# Tests
+# Test Objects
 
-$(BIN)/$(TEST_FMT): $(TEST)/%.$(EXT)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $(OBJS) $< -o $@ $(LFLAGS)
+$(BIN)/$(TEST_PROD): $(OBJS) $(TEST_OBJS) $(TEST_OBJ)
+	$(LINKER) $(OBJS) $(TEST_OBJS) $(TEST_OBJ) -o $@ $(LFLAGS)
+
+$(TEST_OBJ): $(TEST_MAIN)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
+
+$(OBJ)/$(TEST_FMT): $(TEST)/%.$(EXT)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
 
 # IDL shit
 
@@ -106,17 +115,23 @@ $(OBJ)/%.o: $(GEN_SRC)/%.$(EXT)
 ################################################################################
 
 DIRS := $(BIN) $(OBJ) $(GEN_INC) $(GEN_SRC) $(GEN)
+CATCH := "https://github.com/catchorg/Catch2/releases/download/v2.2.2/catch.hpp"
+CATCH_FILE := $(TEST)/catch.hpp
 
-prebuild: makedirs
+prebuild: makedirs $(CATCH_FILE) 
 .PHONY: prebuild
+
+$(CATCH_FILE):
+	wget $(CATCH) -O $(CATCH_FILE)
 
 makedirs:
 	@mkdir -p $(DIRS)
 .PHONY: makedirs
 
 clean:
-	@rm -rf $(DIRS)
-	@mkdir -p $(DIRS)
+	rm -rf $(DIRS)
+	mkdir -p $(DIRS)
+	rm -f $(CATCH_FILE)
 .PHONY: clean
 
 echo:
@@ -129,3 +144,4 @@ echo:
 .PHONY: echo
 	@mkdir -p $(BIN) $(OBJ)
 .PHONY: makedirs
+

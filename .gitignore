@@ -1,6 +1,9 @@
 # vim turds
 *.sw[a-zA-Z]
 
+# let's not include catch as "source"
+test/catch.hpp
+
 ospl-*.log
 
 # sublime shit
