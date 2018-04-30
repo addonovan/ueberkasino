@@ -13,7 +13,7 @@ IDL         := idl
 CXX         := g++
 CXXFLAGS    := -Wall -Wextra -Werror -g -std=c++14 \
                `fltk-config --cxxflags` \
-			   -DDEBUG
+			   -DDEBUG -O0
 
 LINKER      := g++
 LFLAGS      := -L${OSPL_HOME}/lib \
@@ -54,7 +54,7 @@ TEST_BINS	:= $(patsubst $(TEST)/%.$(EXT), $(BIN)/$(TEST_FMT), $(TEST_SRCS))
 ################################################################################
 
 test: build $(TEST_BINS)
-	bin/test_game
+	gdb bin/test_game
 .PHONY: test
 
 run: build

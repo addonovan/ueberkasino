@@ -1,24 +1,29 @@
-#include <player.hpp>
 #include <stdexcept>
 #include <cstdlib>
-#include <network.hpp>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
+#include <player.hpp>
+#include <network.hpp>
+#include <misc.hpp>
 
 namespace uc
 {
 
     Player::Player()
-        : m_uid{ boost::lexical_cast< std::string >( boost::uuids::random_generator()() ) },
-          m_name{ "Austin Donovan" },
-          m_balance{ 200.0f },
-          m_bet{ 0 },
-          m_strategy{ nullptr },
-          m_game{ nullptr }
+      : m_uid{ 
+            boost::lexical_cast< std::string >( 
+                boost::uuids::random_generator()()
+            )
+        },
+        m_name{ "Austin Donovan" },
+        m_balance{ 200.0f },
+        m_bet{ 0 },
+        m_strategy{ nullptr },
+        m_game{ nullptr }
     {
         // make sure it's the correct length for the uid
         m_uid.erase( 0, net::UUID_LENGTH );
@@ -47,14 +52,44 @@ namespace uc
     Player::bet( int bet )
     {
         int diff = bet - m_bet;
+
+        // make sure we don't go into debt (TOTALLY UNREALISTIC, LET'S BE REAL)
+        if ( m_balance < diff )
+        {
+            diff = m_balance;
+        }
+
         m_balance -= diff;
-        m_bet = bet;
+        m_bet += diff;
+    }
+
+    void
+    Player::on_lose()
+    {
+        // we don't need to remove ANYTHING here, because the money has
+        // already been removed
+        m_bet = 0;
+    }
+
+    void
+    Player::on_win()
+    {
+        // I'm not really sure, but I think you're supposed to be able to get
+        // money back through gambling, not just lose it (?)
+        m_balance += m_bet + m_bet;
+        m_bet = 0;
     }
 
     const net::Game*
     Player::game() const
     {
         return m_game;
+    }
+
+    const net::Hand&
+    Player::hand() const
+    {
+        return m_hand;
     }
 
     void 
@@ -88,29 +123,13 @@ namespace uc
         if ( m_game == nullptr )
             return;
 
-        // we're guaranteed to be looking at the right game, but let's just check
-        if ( strncmp( state.game_uid, m_game->game_uid, net::UUID_LENGTH ) )
-            throw new runtime_error{ "Game UID does not match expected UID!" };
+        // we are TRUSTING that the call-site guarantees that this function
+        // will only be called under the following conditions:
+        // 1. `state` is a game the player is in
+        // 2. `state`'s `active_player` is this player
 
-        // try to find our player's uid in the list
-        for ( auto i = 0u; i < net::MAX_PLAYERS; i++ )
-        {
-            // if our uid doesn't match, then we'll just this entry
-            std::string player_uid{ state.p[ i ].uid, net::UUID_LENGTH };
-            if ( player_uid != m_uid )
-                continue;
-
-            // => we found the player!
-            // so we'll just copy the cards out of the player state and save
-            // the game state
-            memcpy( m_cards, state.p[i].cards, net::MAX_CARDS );
-            *m_game = state;
-            return;
-        }
-
-        // => we looked in the right game, but we couldn't find ourselves
-        // that's REALLY bad!
-        // throw std::runtime_error{ "failed to find ourselves in the correct game :(" };
+        m_hand = to_hand( state.p[ state.active_player ].cards );
+        *m_game = state;
     }
 
     net::Player
@@ -120,7 +139,7 @@ namespace uc
             throw std::runtime_error{ "Cannot calculate move without a strategy set!" };
 
         net::Player copy;
-        copy.count = 0; // TODO figure out what this actually means
+        copy.count = value_of( m_hand ); 
         memcpy( copy.name, m_name.c_str(), net::UUID_LENGTH );
         memcpy( copy.uid, m_uid.c_str(), net::UUID_LENGTH );
         memcpy( copy.game_uid, m_game->game_uid, net::UUID_LENGTH );
@@ -130,12 +149,6 @@ namespace uc
         copy.A = m_strategy->process( m_uid.c_str(), *m_game );
 
         return copy;
-    }
-
-    bool 
-    Player::operator == ( const net::PlayerState& other ) const
-    {
-        return strncmp( other.uid, m_uid.c_str(), net::UUID_LENGTH ) == 0;
     }
 
 }

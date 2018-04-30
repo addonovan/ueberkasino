@@ -69,6 +69,18 @@ namespace uc
         void send_action( net::Action action );
 
         /**
+         * Updates all of the relevant parts of the UI on a timer.
+         */
+        static void update_ui_timed( void* data );
+
+        /**
+         * Updates the card display labels.
+         */
+        void update_card_displays( 
+            std::map< long int, fltk::Label* >& card_displays
+        );
+
+        /**
          * Updates the state of the game and UI when a `game` OSPL event occurs.
          */
         void on_game_update( net::Game game );

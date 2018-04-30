@@ -3,6 +3,7 @@
 
 #include <boost/thread.hpp>
 #include <mutex>
+#include <map>
 
 #include <UberCasino.h>
 #include "player.hpp"
@@ -32,6 +33,9 @@ namespace uc
         /** In a game, and its our turn to play */
         Playing,
 
+        /** In a game, but it's still going and we've either busted or stood */
+        Standing,
+
         /** We were in a game, but it just ended */
         HandOver,
     };
@@ -59,6 +63,9 @@ namespace uc
         /** The current state of the game. */
         GameState m_state;
 
+        /** Mutex for `m_player`. */
+        std::mutex m_player_mtx;
+
         /** The player in this game. */
         Player m_player; 
 
@@ -80,6 +87,18 @@ namespace uc
 
         /** The last time we sent or received an even about the game. */
         TimePoint m_last_response;
+
+        /** The index in the game structure that our player appears in. */
+        long int m_player_index;
+
+        /**
+         * Map of hands in the game, the key is the index of the player in
+         * the game structure.
+         *
+         * The dealer's hand is kept at the special index -1, and the hand
+         * kept by `m_player` is ignored entirely, and the index is skipped.
+         */
+        std::map< long int, net::Hand > m_hands;
 
         //
         // Constructors
@@ -108,6 +127,12 @@ namespace uc
          */
         void delay_timeout();
 
+        /**
+         * Records the hands of all players in the `game`, whose cards
+         * are currently visible.
+         */
+        void record_hands( const net::Game& game );
+
         //
         // Accessor functions
         //
@@ -118,6 +143,30 @@ namespace uc
          * Returns a constant reference to this game's player.
          */
         const Player& player() const;
+
+        /**
+         * Returns a constant reference to all of the known hands in this
+         * game, excluding the player's own, which can be accessed via the
+         * `player()` call.
+         *
+         * The indices are guaranteed to be continuous (i.e. that there won't
+         * be an index 4 without indices 0, 1, 2, and 3), even if this game's
+         * player comes within the range [0, i].
+         *
+         * The dealer's hand will be a special case, and is stored with the
+         * related key of `-1`.
+         */
+        const std::map< long int, net::Hand >& hands() const;
+
+        /**
+         * Tests whether the game is currently at a table and playing or not.
+         */
+        bool in_game() const;
+
+        /**
+         * Tests whether the game the player is in (if any) has dealt cards.
+         */
+        bool cards_dealt() const;
 
         //
         // Callbacks, both UI and Network
@@ -186,6 +235,7 @@ namespace uc
          * Transitions:
          * * => HandOver, when the game is over
          * * => Playing, when we're the active player
+         * * => Standing, when we've busted or stood
          */
         void on_waiting_for_turn( net::Game game );
 
@@ -201,12 +251,22 @@ namespace uc
         void on_playing( net::Game game );
 
         /**
+         * Lets the game enter a sink state while the game is still going on
+         * for other players, but this player has either busted or stood
+         *
+         * Transitions:
+         * * => HandOver, when the game is over
+         * * => Standing, otherwise
+         */
+        void on_standing( net::Game game );
+
+        /**
          * Ends the current game and leaves the dealer's lobby.
          *
          * Transitions:
          * * => SearchingForGame
          */
-        void on_hand_over( net::Game game );
+        void on_hand_over();
 
         /**
          * Safely transitions into the new `state`.

@@ -56,7 +56,13 @@ namespace fltk
          * `(width, height)` and the label `text`.
          */
         RawButton( int x, int y, int width, int height, const std::string& text )
-          : m_button{ new T{ x, y, width, height, text.c_str() } }
+          : m_button{ new T{ 
+                  x, 
+                  y, 
+                  width, 
+                  height, 
+                  strndup( text.c_str(), text.size() ) 
+            } }
         {
         }
 
@@ -249,7 +255,7 @@ namespace fltk
                 m_style.get(), 
                 entries.data(), 
                 entries.size(), 
-                'A', 
+                'E', 
                 0, 
                 0 
             );

@@ -38,7 +38,7 @@ namespace uc
         fltk::RadioButton btn_basic{        625, 225, 20, 20, "Traditional" };
 
         fltk::Label balance{  600, 300, 160, 50, 
-            std::to_string( game.player().balance() )
+            std::to_string( ( int ) game.player().balance() )
         };
         fltk::Label bet{      315, 255, 160, 50,
             std::to_string( game.player().bet() )
@@ -51,15 +51,18 @@ namespace uc
         fltk::Button btn_bet_clear{   345, 355, 90, 45, "CLEAR BET" };
 
         fltk::Label dealer_display{ 315, 133, 175, 65 };
-        fltk::Label player_display{ 315, 453, 175, 65 };
-        std::vector< fltk::Label > player_displays;
+        fltk::Label player_display{ 315, 453, 175, 105 };
+
+        std::map< long int, fltk::Label* > card_displays;
+        card_displays[ -1 ] = &dealer_display;
+        card_displays[ -2 ] = &player_display;
 
         std::vector< fltk::StyleEntry > style_table = {
             { FL_BOLD,      FL_HELVETICA, 18, 0u },
             { FL_ITALIC,    FL_HELVETICA, 18, 0u },
             { FL_BLACK,     FL_HELVETICA, 18, 0u }, 
             { FL_BLACK,     FL_HELVETICA, 34, 0u },
-            { FL_BLACK,     FL_HELVETICA, 12, 0u },
+            { FL_BLACK,     FL_HELVETICA, 10, 0u },
         };
 
         //
@@ -173,23 +176,25 @@ namespace uc
             .style( "DDDDDDD" );
 
         //
-        // Create the Dealer and Player screens
+        // Create the player screens 
         //
 
-        dealer_display.style_table( style_table )
-            .style( "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE" );
+#define PLAYER_ENTRY( i )\
+        fltk::Label player_entry_ ## i { 40, 43 + ( 90 * i ), 175, 65 };\
+        card_displays[ i ] = &player_entry_ ## i;
 
-        player_display.style_table( style_table )
-            .style( "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE" );
+        // this MUST not be done in a for loop, FLTK will get very pissy if you
+        // do because FLTK is an amazingly shitty library that shouldn't exist
+        // with modern C++ code
+        
+        PLAYER_ENTRY( 0 );
+        PLAYER_ENTRY( 1 );
+        PLAYER_ENTRY( 2 );
+        PLAYER_ENTRY( 3 );
+        PLAYER_ENTRY( 4 );
+        PLAYER_ENTRY( 5 );
 
-        for ( auto i = 0; i < net::MAX_PLAYERS - 1; i++ )
-        {
-            fltk::Label player_entry{ 40, 43 + ( 90 * i ), 175, 65 };
-            player_entry.style_table( style_table )
-                .style( "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE" );
-
-            player_displays.push_back( std::move( player_entry ) );
-        }
+#undef PLAYER_ENTRY
 
         //
         // Show the window
@@ -205,6 +210,24 @@ namespace uc
         Network::get().on_dealer_update( [ &game_win ]( net::Dealer dealer ) {
             game_win.on_dealer_update( dealer );
         } );
+
+        std::map< std::string, void* > ui_info;
+
+#define UI_INFO_ITEM( var )\
+        ui_info[ #var ] = reinterpret_cast< void* >( &var );
+
+        UI_INFO_ITEM( game_win );
+        UI_INFO_ITEM( card_displays );
+        UI_INFO_ITEM( bet );
+        UI_INFO_ITEM( balance );
+
+#undef UI_INFO_ITEM
+
+        Fl::add_timeout( 
+            0.5,
+            GameWindow::update_ui_timed,
+            reinterpret_cast< void* >( &ui_info )
+        );
 
         // must be done here so all the c_str() things don't go out of scope
         // or something like that, idk. It screws up the text, that's all I
@@ -223,18 +246,66 @@ namespace uc
     }
 
     void
+    GameWindow::update_ui_timed( void* data )
+    {
+        auto& map = *reinterpret_cast< std::map< std::string, void* >* >( data );
+
+        auto& game = *reinterpret_cast< GameWindow* >( map[ "game_win" ] );
+        auto& displays = 
+            *reinterpret_cast< 
+                std::map< long int, fltk::Label* >* 
+            >( map[ "card_displays" ] ); 
+
+        game.update_card_displays( displays );
+
+        auto* bet = reinterpret_cast< fltk::Label* >( map[ "bet" ] );
+        auto* balance = reinterpret_cast< fltk::Label* >( map[ "balance" ] );
+
+        game.change_bet( 0, bet, balance );
+
+        Fl::add_timeout( 
+            0.5,
+            GameWindow::update_ui_timed,
+            data
+        );
+    }
+
+    void
+    GameWindow::update_card_displays( 
+            std::map< long int, fltk::Label* >& card_displays
+    )
+    {
+        // if we aren't in a game, then we'll just blank out all of our card
+        // displays
+        if ( !m_game.cards_dealt() )
+            return;
+
+        // update all of our game hands
+        auto& hands = m_game.hands();
+       
+        // fill in all of the hand labels with the most recent information 
+        for ( const auto& hand : hands )
+        {
+            auto* label = card_displays[ hand.first ];
+            label->text( to_string( hand.second ) );
+        }
+
+        // finally, update our player's card display
+        // this is a special case where card_displays[ -2 ] is the player's
+        auto* label = card_displays[ -2 ];
+        label->text( to_string( m_game.player().hand() ) );
+    }
+
+    void
     GameWindow::on_game_update( net::Game game )
     {
         m_game.on_game_update( game );
-        // TODO also update all of the card displays to whatever the game
-        // says they should be
     }
 
     void
     GameWindow::on_dealer_update( net::Dealer dealer )
     {
         m_game.on_dealer_update( dealer );
-        // TODO also show the dealer's name if the game is connected correctly
     }
 
 }

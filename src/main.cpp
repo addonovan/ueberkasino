@@ -7,7 +7,6 @@ void setup_handler();
 int main()
 {
     setup_handler();
-    fclose( stderr );
 
     uc::TitleWindow::show();
     return 0;

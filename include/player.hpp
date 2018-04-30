@@ -44,7 +44,7 @@ namespace uc
         std::unique_ptr< Strategy > m_strategy;
 
         /** This player's current hand */
-        net::Card m_cards[ net::MAX_CARDS ];
+        net::Hand m_hand;
 
         /** A copy of the last game we deserialized from. */
         net::Game* m_game;
@@ -99,11 +99,26 @@ namespace uc
         void bet( int bet );
 
         /**
+         * Updates the balance of the player to reflect losing :( 
+         */
+        void on_lose();
+
+        /**
+         * Updates the balance of the player to reflect victory!
+         */
+        void on_win();
+
+        /**
          * A possibly null constant pointer to the current game.
          *
          * This is managed by this class, so DO NOT delete this.
          */
         const net::Game* game() const;
+
+        /**
+         * Accesses the current hand of the player.
+         */
+        const net::Hand& hand() const;
 
         //
         // Network Interface
@@ -147,10 +162,14 @@ namespace uc
     public:
 
         /**
-         * Checks if this player and the `other` player state have the same
-         * UID.
+         * Checks if `this` player and the `other` player-like object (i.e.
+         * a net::Player or net::PlayerState) have the same UID.
          */
-        bool operator == ( const net::PlayerState& other ) const;
+        template< typename T >
+        bool operator == ( const T& other ) const
+        {
+            return strncmp( other.uid, m_uid.c_str(), net::UUID_LENGTH ) == 0;
+        }
 
 
     };

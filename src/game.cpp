@@ -1,5 +1,4 @@
 #include <string>
-#include <map>
 #include <cstring>
 #include <cstdlib>
 #include <iostream>
@@ -17,12 +16,13 @@ namespace uc
     typedef std::lock_guard< std::mutex > LockGuard;
 
     std::map< GameState, std::string > STATE_NAMES = {
-        { GameState::SearchingForGame, "Searching for Game" },
-        { GameState::JoiningGame,      "Joining Game" },
-        { GameState::WaitingForStart,  "Waiting for Start" },
-        { GameState::WaitingForTurn,   "Waiting for Turn" },
-        { GameState::Playing,          "Playing" },
-        { GameState::HandOver,         "Hand Over" },
+        { GameState::SearchingForGame,  "Searching for Game" },
+        { GameState::JoiningGame,       "Joining Game" },
+        { GameState::WaitingForStart,   "Waiting for Start" },
+        { GameState::WaitingForTurn,    "Waiting for Turn" },
+        { GameState::Playing,           "Playing" },
+        { GameState::Standing,          "Standing" },
+        { GameState::HandOver,          "Hand Over" },
     };
 
     std::map< net::GameState, std::string > NET_STATE_NAMES = {
@@ -68,15 +68,71 @@ namespace uc
         };
     }
 
+    void
+    Game::record_hands( const net::Game& game )
+    {
+        // record the dealer's cards into element -1
+        m_hands[ -1 ] = to_hand( game.dealer_cards );
+
+        auto index = game.active_player;   
+
+        // if we're the active player, then we'll update the player's hand
+        if ( index == m_player_index )
+        {
+            LockGuard lock{ m_player_mtx };
+            m_player.from( game );
+            return;
+        }
+        // if it's a player after us, then we have to shift down one position
+        else if ( index > m_player_index )
+        {
+            index--;
+        }
+
+        m_hands[ index ] = to_hand( game.p[ game.active_player ].cards );
+    }
+
     const Player&
     Game::player() const
     {
+        // because this is a const function, this can't lock the mutex, so
+        // lets just hope that it works out
         return m_player;
+    }
+
+    const std::map< long int, net::Hand >&
+    Game::hands() const
+    {
+        return m_hands;
+    }
+
+    bool
+    Game::in_game() const
+    {
+        switch ( m_state )
+        {
+            case GameState::WaitingForStart:
+            case GameState::WaitingForTurn:
+            case GameState::Playing:
+            case GameState::Standing:
+            case GameState::HandOver:
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
+    bool
+    Game::cards_dealt() const
+    {
+        return m_player.game() != nullptr;
     }
 
     void 
     Game::on_bet_changed( int difference )
     {
+        LockGuard lock{ m_player_mtx };
         m_player.bet( m_player.bet() + difference );
     }
 
@@ -98,8 +154,16 @@ namespace uc
         delete m_partial_response;
         m_partial_response = nullptr;
 
-        // we've sent the message, so we must transition
-        transition( GameState::WaitingForTurn );
+        // if we chose to stand, then we'll transition to that sink state, but
+        // otherwise we'll just go back to waiting for our turn
+        if ( action == net::Action::standing )
+        {
+            transition( GameState::Standing );
+        }
+        else
+        {
+            transition( GameState::WaitingForTurn );
+        }
 
         // We sent a packet over the network, so that should prevent the
         // timeout for just a little bit longer
@@ -109,11 +173,14 @@ namespace uc
     void
     Game::on_dealer_update( net::Dealer dealer )
     {
+#ifdef DEBUG
         std::cout << "[D] State = " 
             << std::setw( 20 ) << STATE_NAMES[ m_state ]
             << " || Name = " << std::string{ dealer.name, 32 }
             << std::endl;
+#endif
 
+        LockGuard lock{ m_player_mtx };
         switch ( m_state )
         {
             // if we're looking for a game, we'll just try to join it
@@ -125,6 +192,14 @@ namespace uc
 
                 // we've transitioned to joining the game
                 transition( GameState::JoiningGame );
+
+                // reset any previous state from any previous game
+                m_player_index = -1;
+                m_hands.clear();
+
+                delete m_partial_response;
+                m_partial_response = nullptr;
+
                 break;
 
             // otherwise, don't do anything
@@ -155,10 +230,12 @@ namespace uc
 
         // From here on out is the actual state machine
 
+#ifdef DEBUG
         std::cout << "[G] State = " 
             << std::setw( 20 ) << STATE_NAMES[ m_state ]
             << " || NetState = " << NET_STATE_NAMES[ game.gstate ] 
             << std::endl;
+#endif
 
         // if we're trying to join a game and it's the same game we were
         // trying to join earlier, and we found ourselves in it, then we'll
@@ -191,23 +268,36 @@ namespace uc
             on_playing( game );
         }
 
+        // If playing resulted in our busting, then we'll just go into
+        // this sink state until the game ends
+        if ( m_state == GameState::Standing )
+        {
+            on_standing( game );
+        }
+
         // When the game is over, then we should leave and revert back to
         // trying to join the next game we find
         if ( m_state == GameState::HandOver )
         {
-            on_hand_over( game );
+            on_hand_over();
         }
     }
 
     void
     Game::on_join_game( net::Game game )
     {
+        LockGuard lock{ m_player_mtx };
+
         for ( auto i = 0u; i < net::MAX_PLAYERS; i++ )
         {
             // if we find ourselves in the game, then that means that
             // we were accepted into the game!
             if ( m_player == game.p[ i ] )
             {
+                // save the player index of ourselves so we can skip this
+                // index when saving player states later
+                m_player_index = i;
+
                 // we transition to the next state, and halt acceptingly
                 transition( GameState::WaitingForStart );
                 return;
@@ -231,16 +321,17 @@ namespace uc
     void
     Game::on_waiting_for_turn( net::Game game )
     {
+        record_hands( game );
+
         if ( game.gstate == net::GameState::end_hand )
         {
             transition( GameState::HandOver );
             return;
         }
 
-        auto current_player = game.p[ game.active_player ];
-
-        // we'll transition into the playing state if the UIDs match
-        if ( m_player == current_player )
+        // if we're the current player, then we'll transition into 
+        // the playing state
+        if ( m_player_index == game.active_player )
         {
             transition( GameState::Playing );
         }
@@ -249,23 +340,75 @@ namespace uc
     void
     Game::on_playing( net::Game game )
     {
+        record_hands( game );
+
         if ( game.gstate == net::GameState::end_hand )
         {
-            transition( GameState::HandOver );
+            // calculate the score of our hand vs the dealer's
+            auto dealer = value_of( to_hand( game.dealer_cards ) );
+            auto player = value_of( m_player.hand() );
+
+            // we busted :(
+            if ( player > 21 )
+            {
+                transition( GameState::Standing );
+            }
+            // we beat the dealer!
+            else if ( player >= dealer )
+            {
+                m_player.on_win();
+                transition( GameState::HandOver );
+            }
+            // we lost :(
+            else
+            {
+                m_player.on_lose();
+                transition( GameState::HandOver );
+            }
             return;
         }
 
-        LockGuard lock{ m_partial_response_mtx };
+        // if it's our turn, but we busted, then we'll stop early
+        // and just transition to the busted state
+        if ( value_of( m_player.hand() ) > 21 )
+        {
+            m_player.on_lose();
+            transition( GameState::Standing );
+            return;
+        } 
+        // If we got a black jack, then we'll instantly win and start standing
+        else if ( value_of( m_player.hand() ) == 21 )
+        {
+            m_player.on_win();
+            transition( GameState::Standing );
+            return;
+        }
 
-        delete m_partial_response;
+        {
+            LockGuard lock{ m_partial_response_mtx };
+            delete m_partial_response;
+        }
 
-        auto response = m_player.to();
+        net::Player response;
+        {
+            LockGuard lock{ m_player_mtx };
+            response = m_player.to();
+        }
 
         // if there's an action here, then we'll send it across the network
         if ( response.A != net::Action::idle )
         {
             Network::get().send( response );
-            transition( GameState::WaitingForTurn );
+
+            // if we chose to stand, then we'll move to that sink state
+            if ( response.A == net::Action::standing )
+            {
+                transition( GameState::Standing );
+            }
+            else
+            {
+                transition( GameState::WaitingForTurn );
+            }
         }
         else
         {
@@ -275,11 +418,41 @@ namespace uc
     }
 
     void
-    Game::on_hand_over( net::Game game )
+    Game::on_standing( net::Game game )
     {
-        ( void )( game );
+        record_hands( game );
+
+        if ( game.gstate == net::GameState::end_hand )
+        {
+            transition( GameState::HandOver );
+            return;
+        }
+
+        LockGuard lock{ m_player_mtx };
+
+        // if it's our turn, then we'll just repsond with "standing"
+        if ( m_player == game.p[ game.active_player ] )
+        {
+            auto response = m_player.to();
+            response.A = net::Action::idle;
+            Network::get().send( response );
+        }
+    }
+
+    void
+    Game::on_hand_over()
+    {
         transition( GameState::SearchingForGame );
-        m_player.leave();
+        {
+            LockGuard lock{ m_player_mtx };
+            m_player.leave();
+        }
+       
+        { 
+            LockGuard lock{ m_partial_response_mtx };
+            delete m_partial_response;
+            m_partial_response = nullptr;
+        }
     }
 
     void
@@ -305,6 +478,7 @@ namespace uc
 #endif
 
         transition( GameState::HandOver );
+        on_hand_over();
     }
 
 }

@@ -1,8 +1,9 @@
-
 // Create typedefs for OSPL things, using the minimal net:: namespace
 #ifdef _UBERCASINO_H_
 #ifndef __TYPES_NETWORK__
 #define __TYPES_NETWORK__
+
+#include <array>
 
 /**
  * Namespace dealing with things relating to the OpenSplice network
@@ -45,6 +46,9 @@ namespace net
 
     /** The maximum number of cards a single player can hold. */
     constexpr long int MAX_CARDS = UberCasino::MAX_CARDS_PER_PLAYER;
+
+    /** A hand of cards, owned by either players or dealers */
+    typedef std::array< Card, MAX_CARDS > Hand;
 
 }
 
