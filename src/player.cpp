@@ -146,7 +146,7 @@ namespace uc
         copy.balance = m_balance;
 
         // let the strategy determine what we should do
-        copy.A = m_strategy->process( m_uid.c_str(), *m_game );
+        copy.A = m_strategy->process( *m_game );
 
         return copy;
     }
