@@ -15,6 +15,6 @@ TEST_CASE( "A default player must have certain values" )
 
     SECTION( "The default player will bet $0" )
     {
-        REQUIRE( ( def.bet() ) ) == 0 );
+        REQUIRE( ( def.bet() )  == 0 );
     }
 }
