@@ -51,6 +51,10 @@ namespace uc
 
     void Network::send( net::Player player_event )
     { 
+#if defined(DEBUG_ALL) || defined(DEBUG_NET)
+        std::cout << "[NET] Sending action = " << player_event.A << std::endl;
+#endif
+
         p_io->publish( player_event );
     }
 

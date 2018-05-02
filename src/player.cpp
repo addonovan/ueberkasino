@@ -1,5 +1,6 @@
 #include <stdexcept>
 #include <cstdlib>
+#include <iostream>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/uuid/uuid.hpp>
@@ -27,6 +28,12 @@ namespace uc
     {
         // make sure it's the correct length for the uid
         m_uid.erase( 0, net::UUID_LENGTH );
+
+#if defined(DEBUG_ALL) || defined(DEBUG_PLAYER)
+        std::cout << "[Player]"
+            << "  .name = " << m_name
+            << "  .uuid = " << m_uid << std::endl;
+#endif
     }
 
 

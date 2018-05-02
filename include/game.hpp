@@ -261,12 +261,15 @@ namespace uc
         void on_standing( net::Game game );
 
         /**
-         * Ends the current game and leaves the dealer's lobby.
+         * Ends the current hand, cleans up a bit and then begins to wait
+         * for the next game to start.
          *
          * Transitions:
-         * * => SearchingForGame
+         * * => WaitingForStart 
          */
         void on_hand_over();
+
+    private:
 
         /**
          * Safely transitions into the new `state`.
@@ -282,7 +285,7 @@ namespace uc
          * This will also log the timeout when compiled under `DEBUG` mode.
          *
          * Transitions:
-         * * => HandOver
+         * * => SearchingForGame
          */
         void on_timeout();
 

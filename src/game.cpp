@@ -71,6 +71,36 @@ namespace uc
     void
     Game::record_hands( const net::Game& game )
     {
+#if defined(DEBUG_ALL) || defined(DEBUG_CARDS)
+        {
+#define PRINT_HAND( start, hand )\
+            for ( auto i = start; i < net::MAX_CARDS; i++ )\
+            {\
+                auto card = hand[ i ];\
+                if ( !is_valid( card ) ) break;\
+                std::cout << to_string( card.card )\
+                    << to_string( card.suite )\
+                    << " ";\
+            }\
+            std::cout << std::endl;
+
+            std::cout << "[CARDS][D] ";
+
+            auto dealer = to_hand( game.dealer_cards ); 
+            PRINT_HAND( is_valid( dealer[ 0 ] ) ? 0 : 1, dealer );
+
+            auto player = game.p[ game.active_player ];
+            std::cout << "[CARDS][P="
+                << std::string{ player.uid, net::UUID_LENGTH }
+                << "] ";
+
+            auto hand = to_hand( player.cards );
+            PRINT_HAND( 0, hand ); 
+
+#undef PRINT_HAND
+        }
+#endif
+
         // record the dealer's cards into element -1
         m_hands[ -1 ] = to_hand( game.dealer_cards );
 
@@ -173,10 +203,10 @@ namespace uc
     void
     Game::on_dealer_update( net::Dealer dealer )
     {
-#ifdef DEBUG
-        std::cout << "[D] State = " 
-            << std::setw( 20 ) << STATE_NAMES[ m_state ]
-            << " || Name = " << std::string{ dealer.name, 32 }
+#if defined(DEBUG_ALL) || defined(DEBUG_NET)
+        std::cout << "[NET][D] State = " 
+            << STATE_NAMES[ m_state ]
+            << " Name = " << std::string{ dealer.name, 32 }
             << std::endl;
 #endif
 
@@ -230,10 +260,10 @@ namespace uc
 
         // From here on out is the actual state machine
 
-#ifdef DEBUG
-        std::cout << "[G] State = " 
-            << std::setw( 20 ) << STATE_NAMES[ m_state ]
-            << " || NetState = " << NET_STATE_NAMES[ game.gstate ] 
+#if defined(DEBUG_ALL) || defined(DEBUG_NET)
+        std::cout << "[NET][G] State = " 
+            << STATE_NAMES[ m_state ]
+            << " NetState = " << NET_STATE_NAMES[ game.gstate ] 
             << std::endl;
 #endif
 
@@ -434,7 +464,7 @@ namespace uc
         if ( m_player == game.p[ game.active_player ] )
         {
             auto response = m_player.to();
-            response.A = net::Action::idle;
+            response.A = net::Action::standing;
             Network::get().send( response );
         }
     }
@@ -442,12 +472,7 @@ namespace uc
     void
     Game::on_hand_over()
     {
-        transition( GameState::SearchingForGame );
-        {
-            LockGuard lock{ m_player_mtx };
-            m_player.leave();
-        }
-       
+        transition( GameState::WaitingForStart );
         { 
             LockGuard lock{ m_partial_response_mtx };
             delete m_partial_response;
@@ -460,9 +485,9 @@ namespace uc
     {
         LockGuard lock{ m_state_mtx };
 
-#ifdef DEBUG
-        std::cout << "TRANSITION  " 
-            << std::setw( 20 ) << STATE_NAMES[ m_state ] 
+#if defined(DEBUG_ALL) || defined(DEBUG_TRANSITION)
+        std::cout << "[TRANSITION] " 
+            << STATE_NAMES[ m_state ] 
             << " => "
             << STATE_NAMES[ state ] << std::endl;
 #endif
@@ -473,12 +498,24 @@ namespace uc
     void
     Game::on_timeout()
     {
-#ifdef DEBUG
-        std::cout << "TIMEOUT" << std::endl;
+#if defined(DEBUG_ALL) || defined(DEBUG_TRANSITION)
+        std::cout << "[TRANSITION] TIMEOUT" << std::endl;
 #endif
 
-        transition( GameState::HandOver );
-        on_hand_over();
+        transition( GameState::SearchingForGame );
+
+        // Leaves the  current lobby and cleans up all other things
+        // necessary
+        {
+            LockGuard lock{ m_player_mtx };
+            m_player.leave();
+        } 
+
+        {
+            LockGuard lock{ m_partial_response_mtx };
+            delete m_partial_response;
+            m_partial_response = nullptr;
+        }
     }
 
 }
