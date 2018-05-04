@@ -172,15 +172,15 @@ TEST_CASE( "The Player methods must modify its data accordingly")
 
     SECTION( "Converting data from a joined game should copy cards to the players hand" )
     {
-        // uc::Player dataman;
-        // dataman.strategy( new uc::ConservativeStrategy );
-        // net::Game game = create_game();
-        // net::Dealer dealer = create_dealer();
-        //
-        // dataman.join( dealer );
-        // dataman.from( game );
-        //
-        // REQUIRE( uc::to_string( dataman.hand() ) == expectedH );
+        uc::Player dataman;
+        dataman.strategy( new uc::ConservativeStrategy );
+        net::Game game = create_game();
+        net::Dealer dealer = create_dealer();
+
+        dataman.join( dealer );
+        dataman.from( game );
+
+        REQUIRE( uc::to_string( dataman.hand() ) == expectedH );
 
     }
 
