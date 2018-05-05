@@ -80,61 +80,62 @@ TEST_CASE( "A default player must have certain values" )
 
     SECTION( "The default player must have an empty hand" )
     {
-        REQUIRE(  def.hand()[ 0 ].suite  == (net::Suit) 0 );
-        REQUIRE(  def.hand()[ 0 ].card  == (net::CardKind) 0);
-        REQUIRE(  def.hand()[ 0 ].valid == false );
+        REQUIRE( def.hand()[ 0 ].valid == false );
     }
-
 }
 
 TEST_CASE( "The Player methods must modify its data accordingly")
 {
-    SECTION( "The balance of a player should be changed by the paramater specified" )
+    SECTION( "The balance of a player should change when modified" )
     {
         uc::Player richBoi;
         richBoi.balance( 300 );
-
         REQUIRE( richBoi.balance() == 300.0f );
-
+        
         richBoi.balance( 0 );
-
         REQUIRE( richBoi.balance() == 0.0f );
-
+        
         richBoi.balance( -400 );
-
-        REQUIRE( richBoi.balance() == -400.0f);
+        REQUIRE( richBoi.balance() == -400.0f );
     }
 
-    SECTION( "The players bet should be changed by the paramater specified" )
+    SECTION( "The players bet should change when modified" )
     {
         uc::Player drunkBoi;
         drunkBoi.bet( 10 );
-
         REQUIRE( drunkBoi.bet() == 10 );
 
         drunkBoi.bet( 50 );
-
         REQUIRE( drunkBoi.bet() == 50 );
 
-        drunkBoi.bet( 500 );
-
+        drunkBoi.bet( 200 );
         REQUIRE( drunkBoi.bet() == 200 );
+    }
+    
+    SECTION( "Modifying a player's bet should remove from their balance" )
+    {
+        uc::Player player;
+        player.balance( 200 );
+        player.bet( 20 );
 
-        drunkBoi.balance( 500 );
-        drunkBoi.bet( 500 );
+        REQUIRE( player.balance() == 180 );
+    }
 
-        REQUIRE( drunkBoi.bet() == 500 );
+    SECTION( "A player should not be able to bet more than their balance" )
+    {
+        uc::Player dumbBoi;
+        dumbBoi.balance( 500 );
+        dumbBoi.bet( 1000 );
 
+        REQUIRE( dumbBoi.bet() == 500 );
+        REQUIRE( dumbBoi.balance() == 0 );
     }
 
     SECTION( "A player leaving an invalid game should not crash" )
     {
         uc::Player lostBoi;
-
         lostBoi.leave();
-
         REQUIRE( lostBoi.game() == nullptr );
-
     }
 
     SECTION( "A players uid must match the uid of the player sent over the network")
@@ -145,10 +146,9 @@ TEST_CASE( "The Player methods must modify its data accordingly")
         original.join( dealer );
 
         REQUIRE( original == original.to() );
-
     }
 
-    SECTION( "If the player joins a game, the uid of the current game must match the game_uid of the dealer" )
+    SECTION( "A serialized player should equal is unserialized counterpart" )
     {
         net::Dealer dealer;
         uc::Player janus;
@@ -159,10 +159,9 @@ TEST_CASE( "The Player methods must modify its data accordingly")
         std::string dlguid = dealer.game_uid;
 
         REQUIRE( plguid == dlguid );
-
     }
 
-    SECTION(" Trying to convert data from a game struct before joining a game should throw an exception" )
+    SECTION( "Deserializing a player without joining a game should throw" )
     {
         uc::Player eager;
         net::Game nogame;
@@ -178,10 +177,9 @@ TEST_CASE( "The Player methods must modify its data accordingly")
         dataman.from( create_game() );
 
         REQUIRE( uc::to_string( dataman.hand() ) == expectedH );
-
     }
 
-    SECTION( "The to method should generate a correct player for networking" )
+    SECTION( "Serialized player packet should be correct" )
     {
         uc::Player source;
         source.balance( 500 );
@@ -207,6 +205,33 @@ TEST_CASE( "The Player methods must modify its data accordingly")
         REQUIRE( actual.balance == 500.0f );
         REQUIRE( actual.count == 30 );
         REQUIRE( actual.A == net::Action::hitting );
+    }
+
+    SECTION( "A player's bet should be forfeited on a loss" )
+    {
+        uc::Player player;
+        player.bet( 20 );
+        player.on_lose();
+        REQUIRE( player.bet() == 0 );
+        REQUIRE( ( int ) player.balance() == 180 );
+    }
+
+    SECTION( "A player's bet should be returned two fold on a win" )
+    {
+        uc::Player player;
+        player.bet( 20 );
+        player.on_win();
+        REQUIRE( player.bet() == 0 );
+        REQUIRE( ( int ) player.balance() == 220 );
+    }
+
+    SECTION( "A player's bet should be returned on a tie" )
+    {
+        uc::Player player;
+        player.bet( 20 );
+        player.on_tie();
+        REQUIRE( player.bet() == 0 );
+        REQUIRE( ( int ) player.balance() == 200 );
     }
 }
 

@@ -88,6 +88,13 @@ namespace uc
     }
 
     void
+    Player::on_tie()
+    {
+        m_balance += m_bet;
+        m_bet = 0;
+    }
+
+    void
     Player::on_win()
     {
         // I'm not really sure, but I think you're supposed to be able to get

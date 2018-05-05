@@ -104,6 +104,11 @@ namespace uc
         void on_lose();
 
         /**
+         * Updates the balance of the player to reflect a tie.
+         */
+        void on_tie();
+
+        /**
          * Updates the balance of the player to reflect victory!
          */
         void on_win();
