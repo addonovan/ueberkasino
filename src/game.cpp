@@ -357,6 +357,7 @@ namespace uc
     {
         if ( game.gstate == net::GameState::playing )
         {
+            m_hands.clear();
             transition( GameState::WaitingForTurn );
         }
     }
@@ -447,7 +448,7 @@ namespace uc
         LockGuard lock{ m_player_mtx };
 
         // if it's our turn, then we'll just repsond with "standing"
-        if ( m_player == game.p[ game.active_player ] )
+        if ( m_player_index == game.active_player )
         {
             auto response = m_player.to();
             response.A = net::Action::standing;
