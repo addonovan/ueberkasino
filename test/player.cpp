@@ -174,11 +174,8 @@ TEST_CASE( "The Player methods must modify its data accordingly")
     {
         uc::Player dataman;
         dataman.strategy( new uc::ConservativeStrategy );
-        net::Game game = create_game();
-        net::Dealer dealer = create_dealer();
-
-        dataman.join( dealer );
-        dataman.from( game );
+        dataman.join( create_dealer() );
+        dataman.from( create_game() );
 
         REQUIRE( uc::to_string( dataman.hand() ) == expectedH );
 
@@ -186,24 +183,30 @@ TEST_CASE( "The Player methods must modify its data accordingly")
 
     SECTION( "The to method should generate a correct player for networking" )
     {
-        uc::Player sourcePl;
-        sourcePl.balance( 500 );
-        sourcePl.strategy( new uc::RecklessStrategy );
+        uc::Player source;
+        source.balance( 500 );
+        source.strategy( new uc::RecklessStrategy );
 
         net::Dealer dealio;
-        sourcePl.join( dealio );
+        source.join( dealio );
+        source.from( create_game() );
 
-        net::Player netPl;
-        netPl = sourcePl.to();
-        std::string netname = netPl.name;
+        auto actual = source.to();
+        
+        // find the null terminator, or use the entire length of the string
+        auto* end = std::find( 
+            actual.name, 
+            actual.name + sizeof( actual.name ),
+            '\0' 
+        );
+        auto actual_name = std::string{ actual.name, end };
 
-        REQUIRE( netname == "Austin Donovan" );
-        REQUIRE( netPl.balance == 500.0f );
-        REQUIRE( netPl.A == net::Action::hitting );
+        auto expected_name = std::string{ "Austin Donovan" };
 
-
-
+        REQUIRE( actual_name == expected_name );
+        REQUIRE( actual.balance == 500.0f );
+        REQUIRE( actual.count == 30 );
+        REQUIRE( actual.A == net::Action::hitting );
     }
-
-
 }
+

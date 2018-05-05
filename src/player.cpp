@@ -115,6 +115,10 @@ namespace uc
         delete m_game;
         m_game = new net::Game;
 
+        // forcibly zero the entire struct out, so that everything is in
+        // an invalid state but the player index is still valid
+        memset( m_game, 0, sizeof( *m_game ) );
+
         // copy the game uid from that, then we'll need to publish our
         // updated selves to the network
         memcpy( m_game->game_uid, dealer.game_uid, net::UUID_LENGTH );
@@ -157,18 +161,24 @@ namespace uc
         if ( m_game == nullptr )
             throw std::runtime_error{ "Cannot serialize player when not in a game!" };
 
+        if ( m_game->active_player < 0
+          || m_game->active_player > net::MAX_PLAYERS )
+        {
+            throw std::runtime_error{ "Active player out of bounds" };
+        }
+
         net::Player copy;
         copy.count = value_of( m_hand ); 
-        memcpy( copy.name, m_name.c_str(), net::UUID_LENGTH );
+
+        memset( copy.name, 0, 32 );
+        memcpy( copy.name, m_name.c_str(), m_name.size() );
+
         memcpy( copy.uid, m_uid.c_str(), net::UUID_LENGTH );
         memcpy( copy.game_uid, m_game->game_uid, net::UUID_LENGTH );
         copy.balance = m_balance;
 
         // let the strategy determine what we should do
-        if ( m_game->active_player > 0 && m_game->active_player < net::MAX_PLAYERS )
-            copy.A = m_strategy->process( *m_game );
-        else
-            copy.A = net::Action::idle;
+        copy.A = m_strategy->process( *m_game );
 
         return copy;
     }
