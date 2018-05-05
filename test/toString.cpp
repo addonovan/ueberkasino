@@ -8,55 +8,58 @@ TEST_CASE( "to_string on Hand objects", "[misc][to_string(Hand)]" )
 {
     SECTION( "A full hand should include every card without bounds issues" )
     {
-        net::Hand hand;
+        net::Card full[ net::MAX_CARDS ];
         std::string expected = "";
-        
+
         // set all cards to Ace of Diamonds and build the expected
         // output string at the same time
         for( auto i = 0u; i < net::MAX_CARDS; i++ )
         {
-            hand[ i ].suite = net::Suit::diamonds;
-            hand[ i ].card = net::CardKind::ace;
-            hand[ i ].valid = true;
-            
+            full[ i ].suite = net::Suit::diamonds;
+            full[ i ].card = net::CardKind::ace;
+            full[ i ].valid = true;
+
             expected += "Ace of Diamonds\n";
         }
-        
+        net::Hand hand = uc::to_hand( full );
+
         REQUIRE( uc::to_string( hand ) == expected );
     }
 
     SECTION( "A partially filled hand should not include invalid cards" )
     {
-        net::Hand hand;
+        net::Card part[ 7 ];
         std::string expected = "";
-        
+
         for( auto i = 0u; i < 7; i++ )
         {
-            hand[ i ].suite = net::Suit::diamonds;
-            hand[ i ].card = net::CardKind::ace;
-            hand[ i ].valid = true;
-            
+            part[ i ].suite = net::Suit::diamonds;
+            part[ i ].card = net::CardKind::ace;
+            part[ i ].valid = true;
+
             expected += "Ace of Diamonds\n";
         }
-        
+        net::Hand hand = uc::to_hand( part );
+
         REQUIRE( uc::to_string( hand ) == expected );
     }
 
     SECTION( "A face-down first card should be represented with \"Face Down\"" )
     {
-        net::Hand hand;
+        net::Card fdown[ 2 ];
         std::string expected = "";
-        
-        hand[ 0 ].suite = net::Suit::diamonds;
-        hand[ 0 ].card = net::CardKind::ace;
-        hand[ 0 ].valid = false;
+
+        fdown[ 0 ].suite = net::Suit::diamonds;
+        fdown[ 0 ].card = net::CardKind::ace;
+        fdown[ 0 ].valid = false;
         expected += "Face Down\n";
-        
-        hand[ 1 ].suite = net::Suit::diamonds;
-        hand[ 1 ].card = net::CardKind::ten;
-        hand[ 1 ].valid = true;
+
+        fdown[ 1 ].suite = net::Suit::diamonds;
+        fdown[ 1 ].card = net::CardKind::ten;
+        fdown[ 1 ].valid = true;
         expected += "Ten of Diamonds\n";
 
+        net::Hand hand = uc::to_hand( fdown );
         REQUIRE( uc::to_string( hand ) == expected );
     }
 }
@@ -80,7 +83,7 @@ TEST_CASE( "to_string on Suit enums", "[misc][to_string(Suit)]" )
 }
 
 TEST_CASE( "to_string on CardKind enums", "[misc][to_string(CardKind)]" )
-{        
+{
     SECTION( "An invalid card value should throw an exception" )
     {
         REQUIRE_THROWS( uc::to_string( ( net::CardKind ) 500 ) );

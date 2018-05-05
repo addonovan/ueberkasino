@@ -29,6 +29,15 @@ namespace uc
         // make sure it's the correct length for the uid
         m_uid.erase( 0, net::UUID_LENGTH );
 
+        // make sure to initialize our hand to nothing, as some
+        // compilers/STL implementations will not initialize a Hand's
+        // cards' `valid` boolean to false, but true (which totally
+        // makes sense, y'know?) 
+        for ( auto& card : m_hand )
+        {
+            card.valid = false;
+        }
+
 #if defined(DEBUG_ALL) || defined(DEBUG_PLAYER)
         std::cout << "[Player]"
             << "  .name = " << m_name
@@ -79,6 +88,13 @@ namespace uc
     }
 
     void
+    Player::on_tie()
+    {
+        m_balance += m_bet;
+        m_bet = 0;
+    }
+
+    void
     Player::on_win()
     {
         // I'm not really sure, but I think you're supposed to be able to get
@@ -106,6 +122,10 @@ namespace uc
         delete m_game;
         m_game = new net::Game;
 
+        // forcibly zero the entire struct out, so that everything is in
+        // an invalid state but the player index is still valid
+        memset( m_game, 0, sizeof( *m_game ) );
+
         // copy the game uid from that, then we'll need to publish our
         // updated selves to the network
         memcpy( m_game->game_uid, dealer.game_uid, net::UUID_LENGTH );
@@ -128,7 +148,7 @@ namespace uc
     {
         // if we aren't in a game, then completely ignore this
         if ( m_game == nullptr )
-            return;
+            throw std::runtime_error{ "Cannot deserialize player when not in a game!" };
 
         // we are TRUSTING that the call-site guarantees that this function
         // will only be called under the following conditions:
@@ -145,9 +165,21 @@ namespace uc
         if ( m_strategy == nullptr )
             throw std::runtime_error{ "Cannot calculate move without a strategy set!" };
 
+        if ( m_game == nullptr )
+            throw std::runtime_error{ "Cannot serialize player when not in a game!" };
+
+        if ( m_game->active_player < 0
+          || m_game->active_player > net::MAX_PLAYERS )
+        {
+            throw std::runtime_error{ "Active player out of bounds" };
+        }
+
         net::Player copy;
         copy.count = value_of( m_hand ); 
-        memcpy( copy.name, m_name.c_str(), net::UUID_LENGTH );
+
+        memset( copy.name, 0, 32 );
+        memcpy( copy.name, m_name.c_str(), m_name.size() );
+
         memcpy( copy.uid, m_uid.c_str(), net::UUID_LENGTH );
         memcpy( copy.game_uid, m_game->game_uid, net::UUID_LENGTH );
         copy.balance = m_balance;

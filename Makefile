@@ -14,7 +14,7 @@ IDL         := idl
 CXX         := g++
 CXXFLAGS    := -Wall -Wextra -Werror -std=c++14 \
                `fltk-config --cxxflags` \
-			   -g -O0
+               -g -O0
 DEBUG_FLAGS := -DDEBUG_ALL
 
 LINKER      := g++
