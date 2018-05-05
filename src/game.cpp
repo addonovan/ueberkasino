@@ -156,7 +156,7 @@ namespace uc
     bool
     Game::cards_dealt() const
     {
-        return m_player.game() != nullptr;
+        return m_hands.find( -1 ) != m_hands.end();
     }
 
     void 
