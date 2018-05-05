@@ -372,44 +372,17 @@ namespace uc
     {
         record_hands( game );
 
+        // if the game is over, then we'll immediately transition to the
+        // HandOver state
         if ( game.gstate == net::GameState::end_hand )
         {
-            // calculate the score of our hand vs the dealer's
-            auto dealer = value_of( to_hand( game.dealer_cards ) );
-            auto player = value_of( m_player.hand() );
-
-            // we busted :(
-            if ( player > 21 )
-            {
-                transition( GameState::Standing );
-            }
-            // we beat the dealer!
-            else if ( player >= dealer )
-            {
-                m_player.on_win();
-                transition( GameState::HandOver );
-            }
-            // we lost :(
-            else
-            {
-                m_player.on_lose();
-                transition( GameState::HandOver );
-            }
+            transition( GameState::HandOver );
             return;
         }
 
-        // if it's our turn, but we busted, then we'll stop early
-        // and just transition to the busted state
-        if ( value_of( m_player.hand() ) > 21 )
+        // if we busted or got a blacjack, we'll immediately stop playing
+        if ( value_of( m_player.hand() ) >= 21 )
         {
-            m_player.on_lose();
-            transition( GameState::Standing );
-            return;
-        } 
-        // If we got a black jack, then we'll instantly win and start standing
-        else if ( value_of( m_player.hand() ) == 21 )
-        {
-            m_player.on_win();
             transition( GameState::Standing );
             return;
         }
@@ -472,6 +445,23 @@ namespace uc
     void
     Game::on_hand_over()
     {
+        auto player = value_of( m_player().hand() );
+        auto dealer = value_of( hands()[ -1 ] ); 
+
+        // determine now if the player gets their money back or not
+        if ( player > 21 || dealer > player )
+        {
+            m_player.on_lose();
+        }
+        else if ( player == dealer )
+        {
+            m_player.on_tie();
+        }
+        else
+        {
+            m_player.on_win();
+        }
+
         transition( GameState::WaitingForStart );
         { 
             LockGuard lock{ m_partial_response_mtx };
