@@ -458,8 +458,10 @@ namespace uc
     void
     Game::on_hand_over()
     {
-        auto player = value_of( m_player().hand() );
-        auto dealer = value_of( hands()[ -1 ] ); 
+        LockGuard lock{ m_player_mtx };
+
+        auto player = value_of( m_player.hand() );
+        auto dealer = value_of( m_hands[ -1 ] ); 
 
         // determine now if the player gets their money back or not
         if ( player > 21 || dealer > player )
@@ -468,7 +470,8 @@ namespace uc
         }
         else if ( player == dealer )
         {
-            m_player.on_tie();
+            throw std::runtime_error{ "Tieing is not yet implemented!" };
+            // m_player.on_tie();
         }
         else
         {
