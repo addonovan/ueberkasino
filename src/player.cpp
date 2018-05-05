@@ -29,6 +29,15 @@ namespace uc
         // make sure it's the correct length for the uid
         m_uid.erase( 0, net::UUID_LENGTH );
 
+        // make sure to initialize our hand to nothing, as some
+        // compilers/STL implementations will not initialize a Hand's
+        // cards' `valid` boolean to false, but true (which totally
+        // makes sense, y'know?) 
+        for ( auto& card : m_hand )
+        {
+            card.valid = false;
+        }
+
 #if defined(DEBUG_ALL) || defined(DEBUG_PLAYER)
         std::cout << "[Player]"
             << "  .name = " << m_name
@@ -128,7 +137,7 @@ namespace uc
     {
         // if we aren't in a game, then completely ignore this
         if ( m_game == nullptr )
-            return;
+            throw std::runtime_error{ "Cannot deserialize player when not in a game!" };
 
         // we are TRUSTING that the call-site guarantees that this function
         // will only be called under the following conditions:
@@ -144,6 +153,15 @@ namespace uc
     {
         if ( m_strategy == nullptr )
             throw std::runtime_error{ "Cannot calculate move without a strategy set!" };
+
+        if ( m_game == nullptr )
+            throw std::runtime_error{ "Cannot serialize player when not in a game!" };
+
+        if ( m_game->active_player < 0 )
+            throw std::runtime_error{ "Active player cannot be negative" };
+
+        if ( m_game->active_player > net::MAX_PLAYERS )
+            throw std::runtime_error{ "Active player is out of bounds" };
 
         net::Player copy;
         copy.count = value_of( m_hand ); 
