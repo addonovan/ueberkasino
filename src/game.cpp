@@ -162,6 +162,19 @@ namespace uc
     void 
     Game::on_bet_changed( int difference )
     {
+        // if the player is lowering their bet, then they can't be in a game yet
+        // so if they are, just ignore the request
+        if ( difference < 0 )
+        {
+            if ( m_state == GameState::WaitingForTurn
+              || m_state == GameState::Playing
+              || m_state == GameState::Standing
+              || m_state == GameState::HandOver )
+            {
+                return;
+            }
+        }
+        
         LockGuard lock{ m_player_mtx };
         m_player.bet( m_player.bet() + difference );
     }
