@@ -157,12 +157,6 @@ namespace uc
         if ( m_game == nullptr )
             throw std::runtime_error{ "Cannot serialize player when not in a game!" };
 
-        if ( m_game->active_player < 0 )
-            throw std::runtime_error{ "Active player cannot be negative" };
-
-        if ( m_game->active_player > net::MAX_PLAYERS )
-            throw std::runtime_error{ "Active player is out of bounds" };
-
         net::Player copy;
         copy.count = value_of( m_hand ); 
         memcpy( copy.name, m_name.c_str(), net::UUID_LENGTH );
@@ -171,7 +165,10 @@ namespace uc
         copy.balance = m_balance;
 
         // let the strategy determine what we should do
-        copy.A = m_strategy->process( *m_game );
+        if ( m_game->active_player > 0 && m_game->active_player < net::MAX_PLAYERS )
+            copy.A = m_strategy->process( *m_game );
+        else
+            copy.A = net::Action::idle;
 
         return copy;
     }

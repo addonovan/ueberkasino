@@ -80,8 +80,6 @@ TEST_CASE( "A default player must have certain values" )
 
     SECTION( "The default player must have an empty hand" )
     {
-        REQUIRE(  def.hand()[ 0 ].suite  == (net::Suit) 0 );
-        REQUIRE(  def.hand()[ 0 ].card  == (net::CardKind) 0);
         REQUIRE(  def.hand()[ 0 ].valid == false );
     }
 
@@ -197,7 +195,9 @@ TEST_CASE( "The Player methods must modify its data accordingly")
         net::Player netPl;
         netPl = sourcePl.to();
 
-        REQUIRE( netPl.name == plname.c_str() );
+        auto net_player_name = std::string{ netPl.name, sizeof( netPl.name ) };
+
+        REQUIRE( net_player_name == "Austin Donovan" );
         REQUIRE( netPl.balance == 500.0f );
         REQUIRE( netPl.A == net::Action::hitting );
 
