@@ -40,7 +40,13 @@ void join_game( Game& game1, Game& game2, net::Game& game );
  *
  * Otherwise, they will be dealt two aces.
  */
-void deal_cards( Game& game1, Game& game2, net::Game& game, int turn = 1 );
+void deal_20s( Game& game1, Game& game2, net::Game& game );
+
+void deal_12s( Game& game1, Game& game2, net::Game& game );
+
+void deal_blackjack( Game& game1, Game& game2, net::Game& game );
+
+void deal_bust( Game& game1, Game& game2, net::Game& game );
 
 /**
  * Ends the game between the two players.
@@ -88,7 +94,7 @@ TEST_CASE( "Game State Machine" )
         Game game2;
         net::Game game;
         join_game( game1, game2, game );
-        deal_cards( game1, game2, game );
+        deal_20s( game1, game2, game );
         
         REQUIRE( game1.cards_dealt() == true );
         REQUIRE( game2.cards_dealt() == true );
@@ -100,7 +106,7 @@ TEST_CASE( "Game State Machine" )
         Game game2;
         net::Game game;
         join_game( game1, game2, game );
-        deal_cards( game1, game2, game );
+        deal_20s( game1, game2, game );
 
         // hand2 is the hand of the 2nd player, not the first, which is
         // why the numbers for the hands and games appear mismatched
@@ -132,7 +138,7 @@ TEST_CASE( "Game State Machine" )
         Game game2;
         net::Game game = create_game();
         join_game( game1, game2, game );
-        deal_cards( game1, game2, game );
+        deal_20s( game1, game2, game );
 
         auto dealer = game1.hands().at( -1 );
 
@@ -149,12 +155,12 @@ TEST_CASE( "Game State Machine" )
         Game game2;
         net::Game game = create_game();
         join_game( game1, game2, game );
-        deal_cards( game1, game2, game );
+        deal_20s( game1, game2, game );
         end_game( game1, game2, game );
 
         REQUIRE( game1.in_game() == true );
         REQUIRE( game2.in_game() == true );
-
+        
         REQUIRE( game1.cards_dealt() == true );
         REQUIRE( game2.cards_dealt() == true );
     }
@@ -165,20 +171,7 @@ TEST_CASE( "Game State Machine" )
         net::Game game = create_game();
         game1.on_bet_changed( 20 );
         join_game( game1, game2, game );
-
-        game.p[ 0 ].cards[ 0 ] = net::Card {
-            .card = net::CardKind::ace,
-            .suite = net::Suit::spades,
-            .valid = true
-        };
-        game.p[ 0 ].cards[ 1 ] = net::Card {
-            .card = net::CardKind::jack,
-            .suite = net::Suit::spades,
-            .valid = true
-        };
-
-        game.active_player = 0;
-        game1.on_game_update( game );
+        deal_blackjack( game1, game2, game );
         end_game( game1, game2, game );
 
         // the player should immediately win, so their bet should be refunded
@@ -193,55 +186,12 @@ TEST_CASE( "Game State Machine" )
         net::Game game = create_game();
         game1.on_bet_changed( 20 );
         join_game( game1, game2, game );
-
-        game.p[ 0 ].cards[ 0 ] = net::Card {
-            .card = net::CardKind::jack,
-            .suite = net::Suit::spades,
-            .valid = true
-        };
-        game.p[ 0 ].cards[ 1 ] = net::Card {
-            .card = net::CardKind::jack,
-            .suite = net::Suit::spades,
-            .valid = true
-        };
-        game.p[ 0 ].cards[ 2 ] = net::Card {
-            .card = net::CardKind::jack,
-            .suite = net::Suit::spades,
-            .valid = true
-        };
-
-        game.active_player = 0;
-        game1.on_game_update( game );
+        deal_bust( game1, game2, game );
         end_game( game1, game2, game );
 
         // the player should immediately lose, so their bet should be taken 
         REQUIRE( ( int ) game1.player().balance() == 180 );
         REQUIRE( game1.player().bet() == 0 );
-    }
-
-    SECTION( "Can immediately begin to play another hand" )
-    {
-        Game game1, game2;
-        net::Game game = create_game();
-        join_game( game1, game2, game );
-        deal_cards( game1, game2, game );
-        end_game( game1, game2, game );
-        
-        // deal different cards, (as they are WaitingForStart at this point)
-        deal_cards( game1, game2, game, 2 );
-
-        auto hand1 = game1.player().hand();
-        auto hand2 = game2.player().hand();
-
-        REQUIRE( value_of( hand1 ) == 12 );
-        REQUIRE( value_of( hand2 ) == 12 );
-
-        // now, check each player's record of the OTHER player's hand
-        hand2 = game1.hands().at( 0 );
-        hand1 = game2.hands().at( 0 );
-
-        REQUIRE( value_of( hand1 ) == 12 );
-        REQUIRE( value_of( hand2 ) == 12 );
     }
 }
 
@@ -293,24 +243,130 @@ join_game( Game& game1, Game& game2, net::Game& game )
     game2.on_game_update( game );
 }
 
-void 
-deal_cards( Game& game1, Game& game2, net::Game& game, int turn )
+void
+deal_blackjack( Game& game1, Game& game2, net::Game& game )
 {
     game.gstate = net::GameState::playing;
 
     game.p[ 0 ].cards[ 0 ] = game.p[ 1 ].cards[ 0 ] = net::Card {
-        .card = ( turn == 1 ? net::CardKind::king : net::CardKind::ace ),
+        .card = net::CardKind::ace,
         .suite = net::Suit::spades,
         .valid = true
     };
     game.p[ 0 ].cards[ 1 ] = game.p[ 1 ].cards[ 1 ] = net::Card {
-        .card = ( turn == 1 ? net::CardKind::queen : net::CardKind::ace ),
+        .card = net::CardKind::jack,
         .suite = net::Suit::hearts,
         .valid = true
     };
 
     game.dealer_cards[ 0 ] = net::Card {
-        .card = net::CardKind::jack,
+        .card = net::CardKind::two,
+        .suite = net::Suit::clubs,
+        .valid = false
+    };
+    game.dealer_cards[ 1 ] = net::Card {
+        .card = net::CardKind::ten,
+        .suite = net::Suit::diamonds,
+        .valid = true
+    };
+
+    game.active_player = 1;
+    game1.on_game_update( game );
+
+    game.active_player = 0;
+    game2.on_game_update( game );
+}
+
+void 
+deal_20s( Game& game1, Game& game2, net::Game& game )
+{
+    game.gstate = net::GameState::playing;
+
+    game.p[ 0 ].cards[ 0 ] = game.p[ 1 ].cards[ 0 ] = net::Card {
+        .card = net::CardKind::king,
+        .suite = net::Suit::spades,
+        .valid = true
+    };
+    game.p[ 0 ].cards[ 1 ] = game.p[ 1 ].cards[ 1 ] = net::Card {
+        .card = net::CardKind::queen,
+        .suite = net::Suit::hearts,
+        .valid = true
+    };
+
+    game.dealer_cards[ 0 ] = net::Card {
+        .card = net::CardKind::two,
+        .suite = net::Suit::clubs,
+        .valid = false
+    };
+    game.dealer_cards[ 1 ] = net::Card {
+        .card = net::CardKind::ten,
+        .suite = net::Suit::diamonds,
+        .valid = true
+    };
+
+    game.active_player = 1;
+    game1.on_game_update( game );
+
+    game.active_player = 0;
+    game2.on_game_update( game );
+}
+
+void 
+deal_12s( Game& game1, Game& game2, net::Game& game )
+{
+    game.gstate = net::GameState::playing;
+
+    game.p[ 0 ].cards[ 0 ] = game.p[ 1 ].cards[ 0 ] = net::Card {
+        .card = net::CardKind::king,
+        .suite = net::Suit::spades,
+        .valid = true
+    };
+    game.p[ 0 ].cards[ 1 ] = game.p[ 1 ].cards[ 1 ] = net::Card {
+        .card = net::CardKind::two, 
+        .suite = net::Suit::hearts,
+        .valid = true
+    };
+
+    game.dealer_cards[ 0 ] = net::Card {
+        .card = net::CardKind::two,
+        .suite = net::Suit::clubs,
+        .valid = false
+    };
+    game.dealer_cards[ 1 ] = net::Card {
+        .card = net::CardKind::ten,
+        .suite = net::Suit::diamonds,
+        .valid = true
+    };
+
+    game.active_player = 1;
+    game1.on_game_update( game );
+
+    game.active_player = 0;
+    game2.on_game_update( game );
+}
+void 
+deal_bust( Game& game1, Game& game2, net::Game& game )
+{
+    game.gstate = net::GameState::playing;
+
+    game.p[ 0 ].cards[ 0 ] = game.p[ 1 ].cards[ 0 ] = net::Card {
+        .card = net::CardKind::king,
+        .suite = net::Suit::spades,
+        .valid = true
+    };
+    game.p[ 0 ].cards[ 1 ] = game.p[ 1 ].cards[ 1 ] = net::Card {
+        .card = net::CardKind::king,
+        .suite = net::Suit::spades,
+        .valid = true
+    };
+    game.p[ 0 ].cards[ 2 ] = game.p[ 1 ].cards[ 2 ] = net::Card {
+        .card = net::CardKind::king,
+        .suite = net::Suit::spades,
+        .valid = true
+    };
+
+    game.dealer_cards[ 0 ] = net::Card {
+        .card = net::CardKind::two,
         .suite = net::Suit::clubs,
         .valid = false
     };
