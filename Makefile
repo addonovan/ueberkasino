@@ -12,9 +12,10 @@ OBJ         := obj
 IDL         := idl
 
 CXX         := g++
-CXXFLAGS    := -Wall -Wextra -Werror -g -std=c++14 \
+CXXFLAGS    := -Wall -Wextra -Werror -std=c++14 \
                `fltk-config --cxxflags` \
-			   -DDEBUG_ALL -O0
+			   -g -O0
+DEBUG_FLAGS := -DDEBUG_ALL
 
 LINKER      := g++
 LFLAGS      := -L${OSPL_HOME}/lib \
@@ -64,6 +65,7 @@ run: build
 	./$(BIN)/$(PRODUCT)
 .PHONY: run
 
+debug: $(CXXFLAGS) += $(DEBUG_FLAGS) 
 debug: build
 	gdb $(BIN)/$(PRODUCT)
 .PHONY: run
