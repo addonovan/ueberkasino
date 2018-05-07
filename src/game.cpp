@@ -54,7 +54,7 @@ namespace uc
         new std::thread{
             [ this, last_response ]() {
 
-                std::this_thread::sleep_for( seconds{ 10 } );
+                std::this_thread::sleep_for( seconds{ 20 } );
 
                 LockGuard lock{ m_last_response_mtx };
 
