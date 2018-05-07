@@ -1,3 +1,6 @@
+#include <algorithm>
+#include <iterator>
+
 #include <strategy.hpp>
 #include <misc.hpp>
 
@@ -17,7 +20,7 @@ namespace uc
         ( void )( game );
         return net::Action::idle;
     }
-    
+
     net::Action
     BasicStrategy::process( const net::Game& game ) const
     {
@@ -75,12 +78,41 @@ namespace uc
     net::Action
     ConservativeStrategy::process( const net::Game& game ) const
     {
-        auto count = value_of( to_hand( game.p[ game.active_player ].cards ) );
+        auto hand = to_hand( game.p[ game.active_player ].cards );
 
-        // if we could bust by getting a ten-point-card, then we won't ever hit,
-        // we can safely disregard and eleven-valued-ace in this case because if
-        // that were to cause us to bust, then it'd be valued at a 1 instead.
-        if ( count + 10 > 21 )
+        // no possible way to bust if we have a low score
+        if ( value_of( hand ) <= 11 )
+        {
+            return net::Action::hitting;
+        }
+
+        // if we already have a blackjack, or have busted, then we'll stand
+        if ( value_of( hand ) >= 21 )
+        {
+            return net::Action::standing;
+        }
+
+        // try to add a card of value '10' into the hand so the count won't
+        // mess up even if there's some special ace logic going on
+        auto invalid = std::find_if( 
+            std::begin( hand ), 
+            std::end( hand ),  
+            []( auto& card ) {
+                return !card.valid;
+            }
+        );
+
+        // if the hand is free, then we'll just stand
+        if ( invalid == std::end( hand ) )
+        {
+            return net::Action::standing;
+        }
+
+        invalid->valid = true;
+        invalid->card = net::CardKind::jack;
+        invalid->suite = net::Suit::spades;
+
+        if ( value_of( hand ) > 21 )
         {
             return net::Action::standing;
         }
@@ -91,3 +123,4 @@ namespace uc
     }
 
 }
+

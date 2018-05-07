@@ -26,6 +26,7 @@ namespace uc
      */
     class RecklessStrategy : public Strategy
     {
+    public:
         /**
          * Ignores the current state of the `game` and ALWAYS hits.
          */
@@ -38,6 +39,7 @@ namespace uc
      */
     class ConservativeStrategy : public Strategy
     {
+    public:
         /**
          * This will only hit if there is NO possibility of the player busting.
          */
@@ -49,6 +51,7 @@ namespace uc
      */
     class BasicStrategy : public Strategy
     {
+    public:
         /**
          * Uses the current state of the game along with the current player's
          * hand to determine what action to do next. This will emply so-called
@@ -65,6 +68,7 @@ namespace uc
      */
     class ManualStrategy : public Strategy
     {
+    public:
         /**
          * Will always completely ignore the `game` parameter and
          * simply returns `net::Action::idle` to signify to the UI and Game

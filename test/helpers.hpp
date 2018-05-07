@@ -53,5 +53,49 @@ net::Dealer create_dealer();
  */
 net::Game create_game();
 
-#endif
+/**
+* Creates a game with a player hand > 11 and a dealer hand >6
+*/
+net::Game gen_pl_grt11_dl_grt6();
 
+/**
+* Creates a game with a player hand >11 and a dealer hand <=6
+*/
+net::Game gen_pl_grt11_dl_lte6( int i );
+
+/**
+* Creates a game with a player hand > 11 and a dealer hand = ace
+*/
+net::Game gen_pl_grt11_dl_ace();
+
+/**
+* Creates a game with a player hand <= 11 and a dealer hand > 6
+*/
+net::Game gen_pl_lte11_dl_grt6( int i );
+
+/**
+* Creates a game with a player hand <= 11 and a dealer hand <= 6
+*/
+net::Game gen_pl_lte11_dl_lte6( int i );
+
+/**
+* Creates a game with a player hand <= 11 and a dealer hand = ace
+*/
+net::Game gen_pl_lte11_dl_ace( int i );
+
+/**
+* Creates a game with a player hand = blackjack and a dealer hand >6
+*/
+net::Game gen_pl_blj_dl_grt6();
+
+/**
+* Creates a game with a player hand = blackjack and a dealer hand <=6
+*/
+net::Game gen_pl_blj_dl_lte6( int i );
+
+/**
+* Creates a game with a player hand = blackjack and a dealer hand = ace
+*/
+net::Game gen_pl_blj_dl_ace();
+
+#endif
